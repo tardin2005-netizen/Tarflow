@@ -1,0 +1,6 @@
+{
+  "name": "Tarflow",
+  "description": "Personal finance and task management application with AI insights, cloud sync, and family sharing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,18 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="icon_grad" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2D72F6"/>
+      <stop offset="1" stop-color="#0E3D9E"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="45" fill="url(#icon_grad)"/>
+  
+  <!-- The T -->
+  <path d="M52 52H148V80H113V155H87V80H52V52Z" fill="white"/>
+  
+  <!-- Professional Swoosh -->
+  <path d="M30 165C60 150 95 140 175 80" stroke="#00F5FF" stroke-width="12" stroke-linecap="round"/>
+  
+  <!-- Sharp Arrowhead -->
+  <path d="M158 95L178 78L152 70" stroke="#00F5FF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

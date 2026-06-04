@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Expenses ---
+    match /expenses/{expenseId} {
+      function isValidExpense(data) {
+        return data.userId is string &&
+               data.category is string && data.category.size() <= 50 &&
+               data.name is string && data.name.size() <= 200 &&
+               data.value is number && data.value >= 0 &&
+               data.date is string && data.date.size() <= 20;
+      }
+
+      allow create: if isOwner(incoming().userId) && isValidExpense(incoming());
+      allow update: if isOwner(existing().userId) && isOwner(incoming().userId) && 
+                      isValidExpense(incoming());
+      allow delete: if isOwner(existing().userId);
+      allow list: if isOwner(resource.data.userId);
+      allow get: if isOwner(resource.data.userId);
+    }
+
+    // --- Goals ---
+    match /goals/{goalId} {
+      function isValidGoal(data) {
+        return data.userId is string &&
+               data.category is string && data.category.size() <= 50 &&
+               data.amount is number && data.amount >= 0;
+      }
+
+      allow create: if isOwner(incoming().userId) && isValidGoal(incoming());
+      allow update: if isOwner(existing().userId) && isOwner(incoming().userId) && 
+                      isValidGoal(incoming()) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['amount', 'updatedAt', 'category']);
+      allow delete: if isOwner(existing().userId);
+      allow list: if isOwner(resource.data.userId);
+      allow get: if isOwner(resource.data.userId);
+    }
+
+    // --- TaskLists ---
+    match /taskLists/{listId} {
+      function isValidTaskList(data) {
+        return data.userId is string &&
+               data.name is string && data.name.size() <= 100;
+      }
+
+      allow create: if isOwner(incoming().userId) && isValidTaskList(incoming());
+      allow update: if isOwner(existing().userId) && isOwner(incoming().userId) && 
+                      isValidTaskList(incoming());
+      allow delete: if isOwner(existing().userId);
+      allow list: if isOwner(resource.data.userId);
+      allow get: if isOwner(resource.data.userId);
+    }
+
+    // --- Tasks ---
+    match /tasks/{taskId} {
+      function isValidTask(data) {
+        return data.userId is string &&
+               data.listId is string &&
+               data.title is string && data.title.size() <= 500 &&
+               (data.amount == null || data.amount is number) &&
+               (data.priority in ['baixa', 'media', 'alta']) &&
+               data.completed is bool;
+      }
+
+      allow create: if isOwner(incoming().userId) && isValidTask(incoming());
+      allow update: if isOwner(existing().userId) && isOwner(incoming().userId) && 
+                      isValidTask(incoming());
+      allow delete: if isOwner(existing().userId);
+      allow list: if isOwner(resource.data.userId);
+      allow get: if isOwner(resource.data.userId);
+    }
+
+    // --- Users ---
+    match /users/{userId} {
+      function isValidProfile(data) {
+        return data.userId == userId &&
+               data.name is string && data.name.size() <= 200;
+      }
+
+      allow create: if isOwner(userId) && isValidProfile(incoming());
+      allow update: if isOwner(userId) && isValidProfile(incoming()) &&
+                      incoming().diff(existing()).affectedKeys().hasOnly([
+                        'name', 'age', 'salary', 'area', 'achievements',
+                        'referralCount', 'averageIncome', 'profession',
+                        'avatar', 'email', 'streak', 'lastActive', 'isPublic',
+                        'plannerPhone', 'plannerStep', 'riskProfile'
+                      ]);
+      allow read: if isOwner(userId);
+    }
+  }
+}

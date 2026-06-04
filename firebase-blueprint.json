@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "expense": {
+      "title": "Expense",
+      "description": "A financial expense record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "category": { "type": "string" },
+        "name": { "type": "string" },
+        "value": { "type": "number" },
+        "date": { "type": "string", "format": "date" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "category", "name", "value", "date"]
+    },
+    "goal": {
+      "title": "Goal",
+      "description": "A financial goal for a category or general",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "category", "amount"]
+    },
+    "taskList": {
+      "title": "TaskList",
+      "description": "A list of tasks",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name"]
+    },
+    "task": {
+      "title": "Task",
+      "description": "A specific task item",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "listId": { "type": "string" },
+        "title": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date" },
+        "reminder": { "type": "string", "format": "date-time" },
+        "priority": { "type": "string", "enum": ["baixa", "media", "alta"] },
+        "amount": { "type": "number" },
+        "isPayment": { "type": "boolean" },
+        "completed": { "type": "boolean" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "listId", "title"]
+    },
+    "userProfile": {
+      "title": "UserProfile",
+      "description": "Extended user information",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "age": { "type": "number" },
+        "salary": { "type": "number" },
+        "area": { "type": "string" },
+        "achievements": { "type": "array", "items": { "type": "string" } },
+        "referralCount": { "type": "number" },
+        "plannerPhone": { "type": "string" },
+        "plannerStep": { "type": "number" },
+        "riskProfile": { "type": "string" }
+      },
+      "required": ["userId", "name"]
+    }
+  },
+  "firestore": {
+    "expenses": {
+      "schema": "expense",
+      "description": "User financial expenses"
+    },
+    "goals": {
+      "schema": "goal",
+      "description": "User monthly goals"
+    },
+    "taskLists": {
+      "schema": "taskList",
+      "description": "Collections of tasks"
+    },
+    "tasks": {
+      "schema": "task",
+      "description": "Individual task items"
+    },
+    "users": {
+      "schema": "userProfile",
+      "description": "Private user profiles"
+    }
+  }
+}

@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* Hide scrollbar globally */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+    --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --container-bg: #ffffff;
+    --header-bg: linear-gradient(135deg, #2C5F7C 0%, #1a3a4d 100%);
+    --text-primary: #2C5F7C;
+    --text-secondary: #666;
+    --text-muted: #999;
+    --section-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --border-color: #e0e0e0;
+    --tab-bg: #f8f9fa;
+    --success: #4CAF50;
+    --danger: #FF6B6B;
+    --info: #4A90E2;
+    --warning: #FFA726;
+    --shadow: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-strong: 0 20px 60px rgba(0,0,0,0.3);
+    --period-info-bg: #E3F2FD;
+    --period-info-text: #1976D2;
+}
+
+[data-theme="dark"] {
+    --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --container-bg: #1e1e2e;
+    --header-bg: linear-gradient(135deg, #0f3460 0%, #0a2540 100%);
+    --text-primary: #e8e8f0;
+    --text-secondary: #b8b8c8;
+    --text-muted: #8a8a9a;
+    --section-bg: #2a2a3e;
+    --card-bg: #2e2e44;
+    --border-color: #3e3e54;
+    --tab-bg: #252538;
+    --success: #5dd071;
+    --danger: #ff7b7b;
+    --info: #5ba3f0;
+    --warning: #ffb84d;
+    --shadow: 0 4px 6px rgba(0,0,0,0.4);
+    --shadow-strong: 0 20px 60px rgba(0,0,0,0.6);
+    --period-info-bg: #1a3a5e;
+    --period-info-text: #8ec7ff;
+}
+
+body, html, #root {
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+body {
+    background: var(--bg-gradient);
+    transition: background 0.4s ease;
+    color: var(--text-primary);
+}
+
+.shadow-strong {
+    box-shadow: var(--shadow-strong);
+}
+
+@keyframes tabFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-content {
+    animation: tabFadeIn 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
