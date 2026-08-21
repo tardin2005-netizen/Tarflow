@@ -73,7 +73,7 @@ export default function WelcomeTab() {
         
         {/* Title and Subtitle container */}
         <div className="flex flex-col items-center gap-2 z-10 relative -mt-6 md:-mt-10 w-full">
-          <h1 className="text-5xl md:text-[4rem] font-sans font-black tracking-[-0.04em] text-[var(--text-primary)] leading-none mb-2">
+          <h1 className="text-5xl md:text-[4rem] font-sans font-black text-[var(--text-primary)] leading-none mb-2" style={{ fontVariantLigatures: "none", letterSpacing: "0.035em" }}>
             Tarflow
           </h1>
           <p className="text-[var(--text-secondary)] text-base md:text-xl font-medium tracking-wide text-center mb-8">

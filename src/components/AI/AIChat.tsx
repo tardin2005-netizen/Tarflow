@@ -29,10 +29,11 @@ export default function AIChat({ user }: { user: FirebaseUser | null | undefined
     }
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSend = async (customPhrase?: string) => {
+    const textToSend = customPhrase !== undefined ? customPhrase : input;
+    if (!textToSend.trim() || isLoading) return;
 
-    const userMsg = input.trim();
+    const userMsg = textToSend.trim();
     setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
@@ -62,6 +63,14 @@ export default function AIChat({ user }: { user: FirebaseUser | null | undefined
       setIsLoading(false);
     }
   };
+
+  const presetQuestions = [
+    "Quanto gastei com delivery este mês?",
+    "Qual banco concentra mais movimentações?",
+    "Se eu mantiver meu ritmo de gastos, quanto terei em dezembro?",
+    "Como reduzir despesas recorrentes?",
+    "Recomendar investimentos pro meu perfil"
+  ];
 
   return (
     <>
@@ -115,6 +124,21 @@ export default function AIChat({ user }: { user: FirebaseUser | null | undefined
         </div>
 
         <div className="p-4 bg-[var(--container-bg)] border-t border-[var(--border-color)]">
+          {/* Quick preset questions */}
+          <div className="flex gap-2 overflow-x-auto pb-2.5 mb-2.5 scrollbar-none scroll-smooth">
+            {presetQuestions.map((q, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleSend(q)}
+                disabled={isLoading}
+                className="shrink-0 text-[11px] font-black tracking-normal px-3 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 text-blue-500 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+
           <div className="flex gap-2">
             <input 
               type="text" 
@@ -125,7 +149,7 @@ export default function AIChat({ user }: { user: FirebaseUser | null | undefined
               className="flex-1 bg-[var(--section-bg)] p-3 rounded-2xl text-sm outline-none border border-transparent focus:border-[#667eea] transition-all"
             />
             <button 
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={isLoading || !input.trim()}
               className="w-11 h-11 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white flex items-center justify-center shadow-md hover:scale-105 disabled:opacity-50 transition-all"
             >

@@ -1,5 +1,5 @@
 import React from "react";
-import { X, PlusCircle, BarChart2, PieChart, Target, CheckCircle, User, Info, Moon, Sun, Share2, Crown, Sparkles, Heart, Smartphone, MessageSquare, Building2, PanelLeft, PanelRight } from "lucide-react";
+import { X, PlusCircle, BarChart2, PieChart, Target, CheckCircle, User, Info, Moon, Sun, Share2, Crown, Sparkles, Heart, Smartphone, MessageSquare, Building2, PanelLeft, PanelRight, ShoppingCart } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 import { auth } from "../../lib/firebase";
@@ -24,7 +24,9 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sideb
   
   const navItems = [
     { id: "inicio", icon: <PieChart size={18} />, label: t("Início"), section: t("PRINCIPAL"), isSpecial: false },
+    { id: "supermercado", icon: <ShoppingCart size={18} />, label: t("Supermercado"), section: t("PRINCIPAL") },
     { id: "metas", icon: <Target size={18} />, label: t("Metas"), section: t("PRINCIPAL") },
+    { id: "investimentos", icon: <BarChart2 size={18} />, label: t("Investimentos"), section: t("PRINCIPAL") },
     { id: "extratos", icon: <PlusCircle size={18} />, label: t("Extratos e Adicionar"), section: t("PRINCIPAL"), isSpecial: true },
     { id: "tarefas", icon: <CheckCircle size={18} />, label: t("Tarefas"), section: t("PRINCIPAL") },
     
@@ -65,7 +67,9 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sideb
               <img src="/tarflowicon.png" alt="Tarflow Icon" className="w-full h-auto object-contain drop-shadow-2xl scale-[1.6] pointer-events-auto" />
             </div>
             <div className="flex flex-col ml-1">
-              <span className="text-4xl font-black tracking-tight text-white/90 leading-none">Tarflow</span>
+              <span className="text-4xl font-black tracking-normal text-white/90 leading-none" style={{ fontVariantLigatures: "none", letterSpacing: "0.035em" }}>
+                Tarflow
+              </span>
               <span className="text-[0.65rem] font-bold tracking-[0.2em] text-white/20 uppercase whitespace-nowrap mt-1 font-sans">{t("SISTEMA INTEGRADO")}</span>
             </div>
           </div>

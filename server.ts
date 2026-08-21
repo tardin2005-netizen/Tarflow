@@ -7,11 +7,14 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { PluggyClient } from 'pluggy-sdk';
+import b3AnalysisRouter from "./src/routes/b3Analysis";
+import { withGeminiRetry } from "./src/lib/geminiRetry";
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use("/api/b3", b3AnalysisRouter);
 
 // Lazy load Gemini
 let genAI: GoogleGenAI | null = null;
@@ -163,7 +166,7 @@ app.post("/api/ai/tasks-suggestions", async (req, res) => {
       - Perfil do Usuário: ${JSON.stringify(profile)}
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await withGeminiRetry(() => ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: userPrompt,
       config: {
@@ -171,7 +174,7 @@ app.post("/api/ai/tasks-suggestions", async (req, res) => {
         temperature: 0.3,
         responseMimeType: "application/json"
       }
-    });
+    }));
 
     const text = response.text || "{}";
     const cleanText = text.trim().replace(/^```json\s*/i, "").replace(/```$/, "").trim();
@@ -222,7 +225,7 @@ app.post("/api/ai/chat", async (req, res) => {
       6. IDIOMA: Português (pt-BR).
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await withGeminiRetry(() => ai.models.generateContent({
       model,
       contents: message,
       config: {
@@ -230,7 +233,7 @@ app.post("/api/ai/chat", async (req, res) => {
         temperature: 0.7,
         topP: 0.95,
       }
-    });
+    }));
 
     res.json({ text: response.text });
   } catch (error: any) {
@@ -268,7 +271,7 @@ app.post("/api/ai/dashboard-insights", async (req, res) => {
       Gere insights avançados cruzando despesas com tarefas de pagamento e prazos.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await withGeminiRetry(() => ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: userPrompt,
       config: {
@@ -342,7 +345,7 @@ app.post("/api/ai/dashboard-insights", async (req, res) => {
           ]
         }
       }
-    });
+    }));
 
     const text = response.text || "{}";
     res.json(JSON.parse(text));

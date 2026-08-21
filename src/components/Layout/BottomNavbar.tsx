@@ -1,5 +1,5 @@
 import React from "react";
-import { Menu, Plus, Home, BarChart2, PieChart, User, Target, List, CheckCircle } from "lucide-react";
+import { Menu, Plus, Home, BarChart2, PieChart, User, Target, List, CheckCircle, ShoppingCart } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 
@@ -89,20 +89,20 @@ export default function BottomNavbar({ activeTab, onTabChange, onToggleSidebar }
           </div>
         </button>
  
-        {/* TAB 4: TAREFAS */}
+        {/* TAB 4: SUPERMERCADO */}
         <button
-          onClick={() => onTabChange("tarefas")}
+          onClick={() => onTabChange("supermercado")}
           className="flex-grow py-1 flex flex-col items-center justify-center transition-all rounded-full group cursor-pointer"
         >
           <div 
             className={`px-2 py-1.5 rounded-2xl flex flex-col items-center transition-all ${
-              activeTab === "tarefas" 
+              activeTab === "supermercado" 
                 ? "bg-[#667eea]/12 text-[#667eea]" 
                 : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
-            <CheckCircle size={18} className={`transition-transform duration-300 ${activeTab === "tarefas" ? "scale-110" : "group-hover:scale-105"}`} />
-            <span className="text-[9.5px] font-black uppercase tracking-wider mt-0.5">{t("Tarefas")}</span>
+            <ShoppingCart size={18} className={`transition-transform duration-300 ${activeTab === "supermercado" ? "scale-110" : "group-hover:scale-105"}`} />
+            <span className="text-[9.5px] font-black uppercase tracking-wider mt-0.5">{t("Mercado")}</span>
           </div>
         </button>
       </div>

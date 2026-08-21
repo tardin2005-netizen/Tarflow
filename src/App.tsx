@@ -12,12 +12,14 @@ import AboutTab from "./components/Tabs/AboutTab";
 import ContactTab from "./components/Tabs/ContactTab";
 import OpenFinanceTab from "./components/Tabs/OpenFinanceTab";
 import WelcomeTab from "./components/Tabs/WelcomeTab";
+import InvestimentosTab from "./components/Tabs/InvestimentosTab";
+import SupermercadoTab from "./components/Tabs/SupermercadoTab";
 import { PlusCircle, BarChart2, PieChart, Target, CheckCircle, User, Info, MessageSquare, Building2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { auth } from "./lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 
-type TabId = "inicio" | "extratos" | "metas" | "tarefas" | "perfil" | "sobre" | "contato" | "openfinance" | "welcome";
+type TabId = "inicio" | "extratos" | "metas" | "investimentos" | "tarefas" | "perfil" | "sobre" | "contato" | "openfinance" | "welcome" | "supermercado";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("inicio");
@@ -49,8 +51,10 @@ export default function App() {
     switch (activeTab) {
       case "welcome": return <WelcomeTab />;
       case "inicio": return <DashboardTab />;
+      case "supermercado": return <SupermercadoTab />;
       case "extratos": return <ExtratosTab />;
       case "metas": return <GoalsTab />;
+      case "investimentos": return <InvestimentosTab />;
       case "tarefas": return <TasksTab />;
       case "perfil": return <ProfileTab />;
       case "openfinance": return <OpenFinanceTab />;

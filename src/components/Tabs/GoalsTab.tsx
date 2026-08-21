@@ -121,14 +121,14 @@ export default function GoalsTab() {
         
         <div className="grid lg:grid-cols-12 gap-6 items-end">
           <div className="lg:col-span-5">
-            <label className="block text-[0.6rem] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] mb-3 px-2">Alvo da Meta</label>
+            <label className="block text-[0.6rem] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] mb-3 px-2">Alvo do Limite</label>
             <div className="relative group">
               <select 
                 value={selectedCategory} 
                 onChange={(e) => setSelectedCategory(e.target.value as CategoryId | "GERAL")}
                 className="w-full appearance-none p-5 pl-12 border-2 border-[var(--border-color)] rounded-[1.5rem] bg-[var(--card-bg)] font-black text-sm outline-none focus:border-[#667eea] transition-all cursor-pointer"
               >
-                <option value="GERAL">META GERAL (Todos os gastos)</option>
+                <option value="GERAL">LIMITE GERAL (Todos os gastos)</option>
                 {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label.toUpperCase()}</option>)}
               </select>
               <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 group-hover:scale-110 transition-transform text-[#667eea]">
@@ -158,7 +158,7 @@ export default function GoalsTab() {
             onClick={handleSave} 
             className="lg:col-span-3 bg-gradient-to-br from-[#1a1a2e] to-[#2C5F7C] text-white py-5 px-8 rounded-[1.5rem] font-black text-sm shadow-xl transition-all"
           >
-            FIXAR META
+            DEFINIR LIMITE
           </motion.button>
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function GoalsTab() {
              <p className="text-[0.65rem] font-black opacity-40 uppercase tracking-[0.2em]">Acompanhamento de tetos orçamentários</p>
            </div>
            <div className="text-[0.65rem] font-black text-[var(--text-muted)] bg-[var(--section-bg)] px-3 py-1 rounded-full border border-[var(--border-color)]">
-             {categoryGoals.length} METAS ATIVAS
+             {categoryGoals.length} LIMITES ATIVOS
            </div>
         </div>
 
@@ -187,7 +187,7 @@ export default function GoalsTab() {
           <AnimatePresence mode="popLayout">
             {categoryGoals.length === 0 ? (
               <div className="md:col-span-2 text-center py-20 bg-[var(--section-bg)] rounded-[3rem] border-2 border-dashed border-[var(--border-color)]">
-                <p className="text-[var(--text-muted)] text-sm font-black opacity-30 italic">Sem metas definidas no momento.</p>
+                <p className="text-[var(--text-muted)] text-sm font-black opacity-30 italic">Sem limites definidos no momento.</p>
               </div>
             ) : (
               categoryGoals.map((goal, idx) => renderGoalCard(goal, idx))

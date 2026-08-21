@@ -16,11 +16,31 @@ export default function DashboardTab() {
   const { goals } = useGoals();
   const { t } = useTranslation();
 
-  const [filter, setFilter] = useState<FilterType>("thisMonth" as any);
+  const [filter, setFilter] = useState<FilterType>(() => {
+    const saved = localStorage.getItem("tarflow_db_filter");
+    if (saved === "thisMonth") return "30d";
+    return (saved as FilterType) || "30d";
+  });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
+  const [customStart, setCustomStart] = useState(() => {
+    return localStorage.getItem("tarflow_db_custom_start") || "";
+  });
+  const [customEnd, setCustomEnd] = useState(() => {
+    return localStorage.getItem("tarflow_db_custom_end") || "";
+  });
   const filterRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem("tarflow_db_filter", filter);
+  }, [filter]);
+
+  useEffect(() => {
+    localStorage.setItem("tarflow_db_custom_start", customStart);
+  }, [customStart]);
+
+  useEffect(() => {
+    localStorage.setItem("tarflow_db_custom_end", customEnd);
+  }, [customEnd]);
 
   useEffect(() => {
     // Default filter to "30d" instead of explicit month
@@ -114,7 +134,7 @@ export default function DashboardTab() {
   return (
     <div className="tab-content flex flex-col gap-4 sm:gap-6 w-full overflow-x-hidden">
       <div className="w-full flex justify-center py-4 mb-4">
-        <h1 className="text-5xl md:text-6xl font-black tracking-[-0.04em] text-[var(--text-primary)] relative">
+        <h1 className="text-5xl md:text-6xl font-black text-[var(--text-primary)] relative" style={{ fontVariantLigatures: "none", letterSpacing: "0.035em" }}>
           Tarflow
           <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gradient-to-r from-[#00F5FF] to-[#667eea] rounded-full"></div>
         </h1>
@@ -154,7 +174,7 @@ export default function DashboardTab() {
           </div>
           <div className="relative z-10">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-xs font-bold uppercase tracking-widest opacity-60">Meta Geral</span>
+              <span className="text-xs font-bold uppercase tracking-widest opacity-60">Limite Geral</span>
               <TrendingUp className="w-5 h-5 text-[var(--success)]" />
             </div>
             <div className="text-3xl font-black mb-4">
