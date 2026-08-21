@@ -148,7 +148,7 @@ export default function DashboardTab() {
           className="bg-gradient-to-br from-[#2C5F7C] to-[#1a1a2e] p-4 sm:p-6 rounded-2xl sm:rounded-3xl text-white shadow-xl relative overflow-hidden"
         >
           <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-40 transition-opacity">
-            <img src="/tarflowicon.png" alt="Tarflow Icon" className="w-8 h-8 drop-shadow-lg" />
+            <img src={`${import.meta.env.BASE_URL}tarflowicon.png`} alt="Tarflow Icon" className="w-8 h-8 drop-shadow-lg" />
           </div>
           <div className="relative z-10">
             <div className="flex justify-between items-start mb-2">

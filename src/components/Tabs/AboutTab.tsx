@@ -41,7 +41,7 @@ export default function AboutTab() {
             className="mb-6 flex flex-col items-center"
           >
             <div className="w-full max-w-[20rem] md:max-w-[34rem] flex justify-center items-center shrink-0 -mb-8 sm:-mb-12 md:-mb-16 pointer-events-none">
-              <img src="/tarflowicon.png" alt="Tarflow Icon" className="w-full h-auto drop-shadow-2xl scale-[1.3] md:scale-[1.4] pointer-events-auto" />
+              <img src={`${import.meta.env.BASE_URL}tarflowicon.png`} alt="Tarflow Icon" className="w-full h-auto drop-shadow-2xl scale-[1.3] md:scale-[1.4] pointer-events-auto" />
             </div>
             <h1 className="text-5xl md:text-7xl font-sans font-black text-white leading-none relative z-10" style={{ fontVariantLigatures: "none", letterSpacing: "0.035em" }}>
               Tarflow

@@ -64,9 +64,9 @@ export default function WelcomeTab() {
       >
         {/* Logo */}
         <div className="w-full max-w-[16rem] md:max-w-xs flex justify-center items-center shrink-0 pointer-events-none mb-0">
-          <img 
-            src="/tarflowicon.png" 
-            alt="Tarflow" 
+          <img
+            src={`${import.meta.env.BASE_URL}tarflowicon.png`}
+            alt="Tarflow"
             className="w-full h-auto object-contain drop-shadow-[0_0_30px_rgba(45,115,255,0.3)] transition-all duration-300 scale-[1.2] md:scale-[1.3] pointer-events-auto hover:drop-shadow-[0_20px_40px_rgba(45,115,255,0.5)]"
           />
         </div>

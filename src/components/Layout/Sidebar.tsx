@@ -64,7 +64,7 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sideb
         <div className="p-8 border-b border-white/5 relative bg-white/5 group">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 flex justify-center items-center shrink-0 overflow-visible pointer-events-none">
-              <img src="/tarflowicon.png" alt="Tarflow Icon" className="w-full h-auto object-contain drop-shadow-2xl scale-[1.6] pointer-events-auto" />
+              <img src={`${import.meta.env.BASE_URL}tarflowicon.png`} alt="Tarflow Icon" className="w-full h-auto object-contain drop-shadow-2xl scale-[1.6] pointer-events-auto" />
             </div>
             <div className="flex flex-col ml-1">
               <span className="text-4xl font-black tracking-normal text-white/90 leading-none" style={{ fontVariantLigatures: "none", letterSpacing: "0.035em" }}>

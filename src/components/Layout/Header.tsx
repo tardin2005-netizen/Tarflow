@@ -109,7 +109,7 @@ export default function Header({ onToggleSidebar, user, onLoginSuccess, sidebarP
           
           <div className="hidden sm:flex items-center gap-3">
              <div className="w-10 h-10 flex justify-center items-center overflow-visible">
-               <img src="/tarflowicon.png" alt="Tarflow Logo" className="w-full h-auto object-contain scale-[2]" />
+               <img src={`${import.meta.env.BASE_URL}tarflowicon.png`} alt="Tarflow Logo" className="w-full h-auto object-contain scale-[2]" />
              </div>
              <span className="font-black text-2xl tracking-normal hidden md:block" style={{ fontVariantLigatures: "none", letterSpacing: "0.035em" }}>
                Tarflow
