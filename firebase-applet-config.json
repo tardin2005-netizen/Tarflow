@@ -1,10 +1,10 @@
 {
-  "projectId": "first-oven-z07pf",
-  "appId": "1:560926113358:web:05daad4c15f07bf975cd1f",
-  "apiKey": "AIzaSyA5tOR5y5KEXPzuDV3OlKB5XrvGhg25k1A",
-  "authDomain": "first-oven-z07pf.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-c6026023-df56-4456-832b-3eab3315920c",
-  "storageBucket": "first-oven-z07pf.firebasestorage.app",
-  "messagingSenderId": "560926113358",
-  "measurementId": ""
+  "projectId": "tarflow-e15c3",
+  "appId": "1:79552858560:web:6328a8607031d5e4af6025",
+  "apiKey": "AIzaSyDMivC2-VRhuWLkSbzOuBrZb0Twki3GrqM",
+  "authDomain": "tarflow-e15c3.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "tarflow-e15c3.firebasestorage.app",
+  "messagingSenderId": "79552858560",
+  "measurementId": "G-30BH23RVBM"
 }
