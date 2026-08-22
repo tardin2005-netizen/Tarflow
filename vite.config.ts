@@ -6,7 +6,7 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode, command}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: command === 'build' ? '/Tarflow.v4/' : '/',
+    base: command === 'build' ? '/Tarflow/' : '/',
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
