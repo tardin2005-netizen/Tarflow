@@ -36,7 +36,7 @@
 }
 
 :root {
-    --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-gradient: #f4f6f8;
     --container-bg: #ffffff;
     --header-bg: linear-gradient(135deg, #2C5F7C 0%, #1a3a4d 100%);
     --text-primary: #2C5F7C;
@@ -50,14 +50,14 @@
     --danger: #FF6B6B;
     --info: #4A90E2;
     --warning: #FFA726;
-    --shadow: 0 4px 6px rgba(0,0,0,0.1);
-    --shadow-strong: 0 20px 60px rgba(0,0,0,0.3);
+    --shadow: 0 4px 6px rgba(0,0,0,0.06);
+    --shadow-strong: 0 10px 30px rgba(0,0,0,0.08);
     --period-info-bg: #E3F2FD;
     --period-info-text: #1976D2;
 }
 
 [data-theme="dark"] {
-    --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --bg-gradient: #141424;
     --container-bg: #1e1e2e;
     --header-bg: linear-gradient(135deg, #0f3460 0%, #0a2540 100%);
     --text-primary: #e8e8f0;
@@ -71,22 +71,24 @@
     --danger: #ff7b7b;
     --info: #5ba3f0;
     --warning: #ffb84d;
-    --shadow: 0 4px 6px rgba(0,0,0,0.4);
-    --shadow-strong: 0 20px 60px rgba(0,0,0,0.6);
+    --shadow: 0 4px 6px rgba(0,0,0,0.3);
+    --shadow-strong: 0 10px 30px rgba(0,0,0,0.4);
     --period-info-bg: #1a3a5e;
     --period-info-text: #8ec7ff;
 }
 
 body, html, #root {
-    height: 100dvh;
+    height: 100%;
+    width: 100%;
     margin: 0;
+    padding: 0;
     overflow: hidden;
     overscroll-behavior: none;
 }
 
 body {
-    background: var(--bg-gradient);
-    transition: background 0.4s ease;
+    background: var(--container-bg);
+    transition: background 0.3s ease;
     color: var(--text-primary);
 }
 

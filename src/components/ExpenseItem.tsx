@@ -11,9 +11,16 @@ interface ExpenseItemProps {
   updateExpense: (id: string, data: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   delay?: number;
+  allowDelete?: boolean;
 }
 
-export const ExpenseItem: React.FC<ExpenseItemProps> = ({ expense: e, updateExpense, deleteExpense, delay = 0 }) => {
+export const ExpenseItem: React.FC<ExpenseItemProps> = ({ 
+  expense: e, 
+  updateExpense, 
+  deleteExpense, 
+  delay = 0,
+  allowDelete = true 
+}) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const { t } = useTranslation();
@@ -77,7 +84,7 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({ expense: e, updateExpe
                 }}
                 aria-label={t("Editar descrição")}
                 title={t("Clique para editar a descrição desta transação") || "Clique para editar a descrição desta transação"}
-                className="opacity-0 group-hover:opacity-100 p-1 text-[var(--text-muted)] hover:text-[#667eea] rounded transition-all shrink-0"
+                className="opacity-0 group-hover:opacity-100 p-1 text-[var(--text-muted)] hover:text-[#667eea] rounded transition-all shrink-0 cursor-pointer"
               >
                 <Edit2 size={10} />
               </button>
@@ -88,10 +95,16 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({ expense: e, updateExpe
       </div>
       <div className="flex items-center gap-2 sm:gap-4 pl-2 shrink-0">
         <div className="font-black text-sm text-[var(--danger)] whitespace-nowrap">{formatCurrency(e.value)}</div>
-        <button onClick={() => deleteExpense(e.id)} className="opacity-0 group-hover:opacity-100 p-2 text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded-lg transition-all shrink-0">
-          <Trash2 size={14} />
-        </button>
+        {allowDelete && (
+          <button 
+            onClick={() => deleteExpense(e.id)} 
+            title="Excluir despesa"
+            className="opacity-0 group-hover:opacity-100 p-2 text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded-lg transition-all shrink-0 cursor-pointer"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
     </motion.div>
   );
-}
+};

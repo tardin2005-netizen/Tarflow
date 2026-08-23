@@ -5,7 +5,11 @@ import { useTranslation } from "react-i18next";
 import { auth, googleProvider } from "../../lib/firebase";
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
-export default function WelcomeTab() {
+interface WelcomeTabProps {
+  onEnterGuest?: () => void;
+}
+
+export default function WelcomeTab({ onEnterGuest }: WelcomeTabProps) {
   const { t } = useTranslation();
   
   const [isEmailMode, setIsEmailMode] = useState(false);
@@ -16,11 +20,21 @@ export default function WelcomeTab() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
+    setErrorMsg("");
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
-      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
-        console.error("Login failed", error);
+      console.error("Login failed", error);
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        // User just closed the popup
+        return;
+      }
+      if (error.code === 'auth/popup-blocked') {
+        setErrorMsg("O navegador bloqueou a janela de login do Google. Permita pop-ups ou use o login com Email ou Convidado.");
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setErrorMsg("Domínio de hospedagem não cadastrado no Firebase Auth. Você pode usar o modo Convidado ou Email.");
+      } else {
+        setErrorMsg(`Não foi possível conectar com Google (${error.code || 'erro'}). Tente com Email ou como Convidado.`);
       }
     }
   };
@@ -40,14 +54,16 @@ export default function WelcomeTab() {
       }
     } catch (error: any) {
       console.error("Auth failed", error);
-      if (error.code === 'auth/invalid-credential') {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         setErrorMsg("Email ou senha incorretos.");
       } else if (error.code === 'auth/email-already-in-use') {
-        setErrorMsg("Este email já está cadastrado.");
+        setErrorMsg("Este email já está cadastrado. Faça login.");
       } else if (error.code === 'auth/weak-password') {
         setErrorMsg("A senha deve ter pelo menos 6 caracteres.");
+      } else if (error.code === 'auth/invalid-email') {
+        setErrorMsg("Formato de email inválido.");
       } else {
-        setErrorMsg("Erro na autenticação. Tente novamente.");
+        setErrorMsg(error.message || "Erro na autenticação. Tente novamente.");
       }
     } finally {
       setIsLoading(false);
@@ -55,30 +71,36 @@ export default function WelcomeTab() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 relative z-20">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] w-full py-8 px-4 relative z-20">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="flex flex-col items-center shrink-0 w-full max-w-sm -mt-8 md:-mt-16"
+        className="flex flex-col items-center shrink-0 w-full max-w-md mx-auto"
       >
         {/* Logo */}
         <div className="w-full max-w-[16rem] md:max-w-xs flex justify-center items-center shrink-0 pointer-events-none mb-0">
-          <img
-            src={`${import.meta.env.BASE_URL}tarflowicon.png`}
-            alt="Tarflow"
-            className="w-full h-auto object-contain drop-shadow-[0_0_30px_rgba(45,115,255,0.3)] transition-all duration-300 scale-[1.2] md:scale-[1.3] pointer-events-auto hover:drop-shadow-[0_20px_40px_rgba(45,115,255,0.5)]"
+          <img 
+            src="/tarflowicon.png" 
+            alt="Tarflow" 
+            className="w-full h-auto object-contain drop-shadow-[0_0_30px_rgba(45,115,255,0.3)] transition-all duration-300 scale-[1.1] md:scale-[1.2] pointer-events-auto hover:drop-shadow-[0_20px_40px_rgba(45,115,255,0.5)]"
           />
         </div>
         
         {/* Title and Subtitle container */}
-        <div className="flex flex-col items-center gap-2 z-10 relative -mt-6 md:-mt-10 w-full">
-          <h1 className="text-5xl md:text-[4rem] font-sans font-black text-[var(--text-primary)] leading-none mb-2" style={{ fontVariantLigatures: "none", letterSpacing: "0.035em" }}>
+        <div className="flex flex-col items-center gap-2 z-10 relative -mt-4 md:-mt-6 w-full">
+          <h1 className="text-4xl md:text-5xl font-sans font-black text-[var(--text-primary)] leading-none mb-2 tracking-tight">
             Tarflow
           </h1>
-          <p className="text-[var(--text-secondary)] text-base md:text-xl font-medium tracking-wide text-center mb-8">
-            {t("Controle suas finanças com")} <span className="text-[#00F5FF]">clareza.</span>
+          <p className="text-[var(--text-secondary)] text-sm md:text-base font-medium tracking-wide text-center mb-6">
+            {t("Controle suas finanças com")} <span className="text-[#00F5FF] font-bold">clareza.</span>
           </p>
+
+          {errorMsg && !isEmailMode && (
+            <div className="w-full mb-4 text-xs font-bold text-red-500 bg-red-500/10 p-3.5 rounded-2xl border border-red-500/20 text-center leading-relaxed">
+              {errorMsg}
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             {!isEmailMode ? (
@@ -93,7 +115,7 @@ export default function WelcomeTab() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleGoogleLogin}
-                  className="flex items-center justify-center gap-3 px-8 py-4 rounded-[1.5rem] font-black text-sm md:text-base shadow-xl transition-all bg-white text-zinc-900 w-full hover:bg-gray-50 border border-zinc-200"
+                  className="flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl font-black text-sm md:text-base shadow-lg transition-all bg-white text-zinc-900 w-full hover:bg-gray-50 border border-zinc-200 cursor-pointer"
                 >
                   <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 shrink-0" />
                   <span>{t("Continuar com Google")}</span>
@@ -102,12 +124,23 @@ export default function WelcomeTab() {
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsEmailMode(true)}
-                  className="flex items-center justify-center gap-3 px-8 py-4 rounded-[1.5rem] font-black text-sm md:text-base shadow-xl transition-all bg-[#2C5F7C]/20 hover:bg-[#2C5F7C]/30 border border-[#2C5F7C]/50 text-[var(--text-primary)] w-full"
+                  onClick={() => { setErrorMsg(""); setIsEmailMode(true); }}
+                  className="flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl font-black text-sm md:text-base shadow-lg transition-all bg-[#2C5F7C]/15 hover:bg-[#2C5F7C]/25 border border-[#2C5F7C]/40 text-[var(--text-primary)] w-full cursor-pointer"
                 >
                   <Mail size={18} className="shrink-0" />
                   <span>{t("Continuar com Email")}</span>
                 </motion.button>
+
+                {onEnterGuest && (
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={onEnterGuest}
+                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold text-xs md:text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] bg-[var(--section-bg)] hover:bg-zinc-500/10 border border-[var(--border-color)] w-full transition-all cursor-pointer"
+                  >
+                    <span>{t("Explorar como Visitante (Sem login)")}</span>
+                  </motion.button>
+                )}
               </motion.div>
             ) : (
               <motion.form 
@@ -116,12 +149,12 @@ export default function WelcomeTab() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 onSubmit={handleEmailAuth}
-                className="w-full bg-[var(--card-bg)] p-6 rounded-[2rem] border border-[var(--border-color)] shadow-xl relative"
+                className="w-full bg-[var(--card-bg)] p-6 rounded-3xl border border-[var(--border-color)] shadow-xl relative"
               >
                 <button 
                   type="button"
-                  onClick={() => setIsEmailMode(false)}
-                  className="absolute top-4 left-4 p-2 rounded-full hover:bg-[var(--section-bg)] text-[var(--text-muted)] transition-colors"
+                  onClick={() => { setErrorMsg(""); setIsEmailMode(false); }}
+                  className="absolute top-4 left-4 p-2 rounded-full hover:bg-[var(--section-bg)] text-[var(--text-muted)] transition-colors cursor-pointer"
                 >
                   <ArrowLeft size={18} />
                 </button>
@@ -161,7 +194,7 @@ export default function WelcomeTab() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="seu@email.com"
                             required
-                            className="w-full py-3.5 pl-11 pr-4 bg-[var(--section-bg)] border-2 border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] focus:border-[#667eea] outline-none transition-all font-bold placeholder-[var(--text-muted)]/50"
+                            className="w-full py-3 pl-11 pr-4 bg-[var(--section-bg)] border-2 border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] focus:border-blue-500 outline-none transition-all font-bold placeholder-[var(--text-muted)]/50"
                           />
                         </div>
                       </div>
@@ -180,7 +213,7 @@ export default function WelcomeTab() {
                             placeholder="••••••"
                             required
                             minLength={6}
-                            className="w-full py-3.5 pl-11 pr-4 bg-[var(--section-bg)] border-2 border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] focus:border-[#667eea] outline-none transition-all font-bold placeholder-[var(--text-muted)]/50"
+                            className="w-full py-3 pl-11 pr-4 bg-[var(--section-bg)] border-2 border-[var(--border-color)] rounded-xl text-sm text-[var(--text-primary)] focus:border-blue-500 outline-none transition-all font-bold placeholder-[var(--text-muted)]/50"
                           />
                         </div>
                       </div>
@@ -191,7 +224,7 @@ export default function WelcomeTab() {
                       whileTap={{ scale: 0.98 }}
                       type="submit"
                       disabled={isLoading}
-                      className="w-full mt-6 bg-gradient-to-r from-blue-500 to-[#00F5FF] text-white py-3.5 rounded-xl font-black text-sm shadow-xl hover:shadow-2xl disabled:opacity-70 transition-all flex items-center justify-center gap-2"
+                      className="w-full mt-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-black text-sm shadow-xl hover:shadow-2xl disabled:opacity-70 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {isLoading ? (
                         <span className="animate-pulse">Aguarde...</span>
@@ -206,8 +239,8 @@ export default function WelcomeTab() {
                     <div className="mt-4 text-center">
                       <button
                         type="button"
-                        onClick={() => setIsSignUp(!isSignUp)}
-                        className="text-xs font-bold text-[var(--text-muted)] hover:text-[#667eea] transition-colors"
+                        onClick={() => { setErrorMsg(""); setIsSignUp(!isSignUp); }}
+                        className="text-xs font-bold text-[var(--text-muted)] hover:text-blue-500 transition-colors cursor-pointer"
                       >
                         {isSignUp ? "Já tenho uma conta. Fazer login" : "Não tem conta? Cadastre-se"}
                       </button>

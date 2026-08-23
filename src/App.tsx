@@ -4,22 +4,19 @@ import Header from "./components/Layout/Header";
 import Sidebar from "./components/Layout/Sidebar";
 import BottomNavbar from "./components/Layout/BottomNavbar";
 import DashboardTab from "./components/Tabs/DashboardTab";
-import ExtratosTab from "./components/Tabs/ExtratosTab";
-import GoalsTab from "./components/Tabs/GoalsTab";
-import TasksTab from "./components/Tabs/TasksTab";
+import GestaoGastosTab, { GastosSubTabId } from "./components/Tabs/GestaoGastosTab";
 import ProfileTab from "./components/Tabs/ProfileTab";
 import AboutTab from "./components/Tabs/AboutTab";
 import ContactTab from "./components/Tabs/ContactTab";
-import OpenFinanceTab from "./components/Tabs/OpenFinanceTab";
 import WelcomeTab from "./components/Tabs/WelcomeTab";
 import InvestimentosTab from "./components/Tabs/InvestimentosTab";
-import SupermercadoTab from "./components/Tabs/SupermercadoTab";
-import { PlusCircle, BarChart2, PieChart, Target, CheckCircle, User, Info, MessageSquare, Building2 } from "lucide-react";
+import AIChat from "./components/AI/AIChat";
+import { PlusCircle, BarChart2, PieChart, Target, CheckCircle, User, Info, MessageSquare, Building2, Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { auth } from "./lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 
-type TabId = "inicio" | "extratos" | "metas" | "investimentos" | "tarefas" | "perfil" | "sobre" | "contato" | "openfinance" | "welcome" | "supermercado";
+type TabId = "inicio" | "gastos" | "investimentos" | "perfil" | "sobre" | "contato" | "welcome" | "extratos" | "metas" | "tarefas" | "openfinance" | "supermercado";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("inicio");
@@ -28,6 +25,9 @@ export default function App() {
     return (localStorage.getItem("tarflow-sidebar-pos") as "left" | "right") || "left";
   });
   const [user, loading] = useAuthState(auth);
+  const [isGuest, setIsGuest] = useState<boolean>(() => {
+    return localStorage.getItem("tarflow-guest-mode") === "true";
+  });
   const { t } = useTranslation();
 
   const toggleSidebarPosition = () => {
@@ -36,37 +36,44 @@ export default function App() {
     localStorage.setItem("tarflow-sidebar-pos", newPos);
   };
 
-  // Redirect to welcome if not logged in
+  const handleEnterGuest = () => {
+    setIsGuest(true);
+    localStorage.setItem("tarflow-guest-mode", "true");
+    setActiveTab("inicio");
+  };
+
+  // Redirect to welcome if not logged in and not guest
   useEffect(() => {
-    if (!loading && !user && activeTab !== "sobre" && activeTab !== "contato") {
+    if (!loading && !user && !isGuest && activeTab !== "sobre" && activeTab !== "contato") {
       setActiveTab("welcome");
-    } else if (!loading && user && activeTab === "welcome") {
+    } else if (!loading && (user || isGuest) && activeTab === "welcome") {
       setActiveTab("inicio");
     }
-  }, [user, loading, activeTab]);
+  }, [user, loading, isGuest, activeTab]);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const renderTab = () => {
     switch (activeTab) {
-      case "welcome": return <WelcomeTab />;
+      case "welcome": return <WelcomeTab onEnterGuest={handleEnterGuest} />;
       case "inicio": return <DashboardTab />;
-      case "supermercado": return <SupermercadoTab />;
-      case "extratos": return <ExtratosTab />;
-      case "metas": return <GoalsTab />;
+      case "gastos": return <GestaoGastosTab />;
+      case "supermercado": return <GestaoGastosTab initialSubTab="supermercado" />;
+      case "extratos": return <GestaoGastosTab initialSubTab="extratos" />;
+      case "metas": return <GestaoGastosTab initialSubTab="metas" />;
+      case "openfinance": return <GestaoGastosTab initialSubTab="openfinance" />;
+      case "tarefas": return <GestaoGastosTab initialSubTab="tarefas" />;
       case "investimentos": return <InvestimentosTab />;
-      case "tarefas": return <TasksTab />;
       case "perfil": return <ProfileTab />;
-      case "openfinance": return <OpenFinanceTab />;
       case "sobre": return <AboutTab />;
       case "contato": return <ContactTab />;
-      default: return user ? <DashboardTab /> : <WelcomeTab />;
+      default: return (user || isGuest) ? <DashboardTab /> : <WelcomeTab onEnterGuest={handleEnterGuest} />;
     }
   };
 
   return (
     <ThemeProvider>
-      <div className="fixed inset-0 flex flex-col overflow-hidden transition-colors duration-300 bg-transparent">
+      <div className="fixed inset-0 w-full h-full flex overflow-hidden bg-[var(--container-bg)]">
         <Sidebar 
           isOpen={isSidebarOpen} 
           onClose={() => setIsSidebarOpen(false)} 
@@ -79,15 +86,24 @@ export default function App() {
           }}
         />
         
-        <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? (sidebarPosition === "left" ? "md:ml-[300px] md:scale-[0.98] brightness-90" : "md:mr-[300px] md:scale-[0.98] brightness-90") : ""}`}>
-          <div className="max-w-[1400px] w-full mx-auto bg-[var(--container-bg)] rounded-none md:rounded-2xl shadow-strong overflow-y-auto overflow-x-hidden flex flex-col flex-1 md:my-4">
+        <div className={`flex-1 flex flex-col h-full w-full overflow-hidden transition-all duration-300 min-w-0 ${
+          activeTab !== "welcome" 
+            ? (sidebarPosition === "left" ? "md:pl-[260px] lg:pl-[275px]" : "md:pr-[260px] lg:pr-[275px]") 
+            : ""
+        }`}>
+          <div className="w-full h-full bg-[var(--container-bg)] overflow-y-auto overflow-x-hidden flex flex-col flex-1 min-w-0">
             {activeTab !== "welcome" && (
-              <Header onToggleSidebar={toggleSidebar} user={user} onLoginSuccess={() => setActiveTab("perfil")} sidebarPosition={sidebarPosition} />
+              <Header 
+                onToggleSidebar={toggleSidebar} 
+                user={user} 
+                onLoginSuccess={() => setActiveTab("perfil")} 
+                sidebarPosition={sidebarPosition} 
+              />
             )}
 
-            <main className={`p-3 sm:p-5 ${activeTab !== "welcome" ? 'pb-28 md:pb-5' : ''}`}>
+            <main className={`w-full min-w-0 flex-1 flex flex-col ${activeTab !== "welcome" ? 'p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-28 md:pb-8' : 'p-4'}`}>
               {loading ? (
-                <div className="flex justify-center items-center h-64">
+                <div className="flex justify-center items-center h-64 m-auto">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--success)]"></div>
                 </div>
               ) : renderTab()}
@@ -96,11 +112,14 @@ export default function App() {
         </div>
 
         {activeTab !== "welcome" && (
-          <BottomNavbar 
-            activeTab={activeTab} 
-            onTabChange={(tab) => setActiveTab(tab as TabId)} 
-            onToggleSidebar={toggleSidebar} 
-          />
+          <>
+            <AIChat user={user} />
+            <BottomNavbar 
+              activeTab={activeTab} 
+              onTabChange={(tab) => setActiveTab(tab as TabId)} 
+              onToggleSidebar={toggleSidebar} 
+            />
+          </>
         )}
       </div>
     </ThemeProvider>
