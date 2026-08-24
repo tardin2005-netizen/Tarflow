@@ -356,15 +356,15 @@ export default function DashboardTab() {
             <div className="flex flex-col items-center gap-6 w-full min-w-0 mt-4">
               
               {/* Top: Pie Chart */}
-              <div className="w-[240px] xs:w-[280px] sm:w-[320px] md:w-[380px] h-[240px] xs:h-[280px] sm:h-[320px] md:h-[380px] relative shrink-0">
+              <div className="w-[280px] sm:w-[320px] md:w-[380px] h-[280px] sm:h-[320px] md:h-[380px] relative shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie 
-                      data={stats.chartData} 
-                      dataKey="value" 
-                      nameKey="name" 
-                      cx="50%" cy="50%" 
-                      innerRadius="75%" outerRadius="90%" 
+                    <Pie
+                      data={stats.chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%" cy="50%"
+                      innerRadius="80%" outerRadius="90%"
                       paddingAngle={3}
                       stroke="none"
                     >
@@ -380,7 +380,7 @@ export default function DashboardTab() {
                 {/* Central Text */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none drop-shadow-md px-2">
                   <span className="text-xs font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Total ({FILTER_LABELS[filter]})</span>
-                  <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[var(--text-primary)] leading-none tracking-tight break-words max-w-[85%] text-center">
+                  <span className="text-3xl sm:text-4xl font-black text-[var(--text-primary)] leading-none tracking-tight break-words max-w-[85%] text-center">
                     {formatCurrency(dashboardData.totalMonth)}
                   </span>
                 </div>
