@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  TrendingUp, Layers, Wallet, Calendar, Award, Trash2, X, Sparkles, ChevronDown, ChevronRight, Info, Trophy, Play, Plus, BarChart2, Briefcase, Settings, Newspaper, RefreshCw, DollarSign, Bitcoin, HelpCircle, Activity, ArrowUpRight, ArrowDownRight, PieChart as PieChartIcon
+  TrendingUp, Layers, Wallet, Calendar, Award, Trash2, X, Sparkles, ChevronDown, ChevronRight, Info, Trophy, Play, Plus, BarChart2, Briefcase, Settings, PieChart as PieChartIcon
 } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, LineChart, Line } from "recharts";
 import { formatCurrency } from "../../lib/utils";
-import MercadoBriefingTab from "./MercadoBriefingTab";
 import { B3_ASSET_DATABASE, searchB3Assets, B3AssetData } from "../../data/b3Database";
 
 // TypeScript Interfaces
@@ -53,7 +52,7 @@ const ALLOCATION_COLORS: Record<string, string> = {
 };
 
 export default function InvestimentosTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"briefing" | "carteira" | "lancamentos" | "analise" | "metas" | "resumo" | "patrimonio" | "proventos" | "rentabilidade">("briefing");
+  const [activeSubTab, setActiveSubTab] = useState<"carteira" | "lancamentos" | "analise" | "metas" | "resumo" | "patrimonio" | "proventos" | "rentabilidade">("carteira");
   const [carteiraSubTab, setCarteiraSubTab] = useState<"visao_geral" | "ativos" | "proventos" | "rentabilidade">("visao_geral");
   const [b3Analysis, setB3Analysis] = useState<{
     updatedAt: string;
@@ -65,42 +64,6 @@ export default function InvestimentosTab() {
   const [b3AnalysisError, setB3AnalysisError] = useState<string | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
 
-  // Live Market Extension state (Bitcoin, Dólar, Ibovespa, Selic)
-  const [liveTickers, setLiveTickers] = useState<{
-    updatedAt: string;
-    dolar: { value: string; variation: string; raw?: number };
-    bitcoin: { valueUsd: string; valueBrl: string; variation: string; rawUsd?: number };
-    ibovespa: { points: string; variation: string; raw?: number };
-    selic: { rate: string; note: string; raw?: number };
-  }>({
-    updatedAt: "Em tempo real",
-    dolar: { value: "R$ 5,68", variation: "+0,34%" },
-    bitcoin: { valueUsd: "US$ 84.500", valueBrl: "R$ 479.960", variation: "+2,85%" },
-    ibovespa: { points: "134.200 pts", variation: "+0,65%" },
-    selic: { rate: "14,00% a.a.", note: "Taxa Básica Copom" }
-  });
-  const [isTickersLoading, setIsTickersLoading] = useState(false);
-
-  const fetchLiveTickers = async () => {
-    setIsTickersLoading(true);
-    try {
-      const res = await fetch("/api/market/live-tickers");
-      if (res.ok) {
-        const data = await res.json();
-        setLiveTickers(data);
-      }
-    } catch (err) {
-      console.error("Error fetching live tickers:", err);
-    } finally {
-      setIsTickersLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLiveTickers();
-    const interval = setInterval(fetchLiveTickers, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const fetchB3Analysis = async () => {
     try {
@@ -460,24 +423,13 @@ export default function InvestimentosTab() {
         
         {/* Header controller */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-5 mb-5">
-          <div>
-            <div className="flex flex-wrap items-center gap-2 pb-1.5">
-              <span className="text-[10px] font-black uppercase bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full tracking-wider flex items-center gap-1">
-                <TrendingUp size={11} /> Mercado Financeiro
-              </span>
-              <span className="text-[10px] font-black uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full tracking-wider flex items-center gap-1">
-                <Briefcase size={11} /> B3 + FIIs + Cripto
-              </span>
-              <span className="text-[10px] font-black uppercase bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full tracking-wider flex items-center gap-1">
-                <Sparkles size={11} /> Inteligência Tarflow
-              </span>
-            </div>
-            
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-[var(--text-primary)]">
-              Mercado Financeiro & Investimentos
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+              <Briefcase size={22} className="text-emerald-500 shrink-0" />
+              Investimentos
             </h2>
             <p className="text-xs text-[var(--text-muted)] mt-1 max-w-xl leading-relaxed">
-              Painel integrado de inteligência macroeconômica, consolidação de carteira, proventos e cotações em tempo real.
+              Consolidação de carteira, proventos, custódia e análise fundamentalista B3.
             </p>
           </div>
 
@@ -502,154 +454,9 @@ export default function InvestimentosTab() {
           </div>
         </div>
 
-        {/* --- LIVE MARKET EXTENSIONS: 4 QUADRADOS INDIVIDUAIS DE TICKERS COM PONTUAÇÃO EM BRANCO --- */}
-        <div className="mb-6 space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-[11px] font-black uppercase tracking-wider text-[var(--text-primary)]">
-                Mercado em Tempo Real · Cotações & Índices
-              </span>
-              <span className="text-[10px] text-[var(--text-muted)] font-mono">
-                ({liveTickers.updatedAt})
-              </span>
-            </div>
-
-            <button
-              onClick={fetchLiveTickers}
-              disabled={isTickersLoading}
-              title="Atualizar cotações em tempo real"
-              className="flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer transition-all"
-            >
-              <RefreshCw size={11} className={isTickersLoading ? "animate-spin" : ""} />
-              <span>Atualizar</span>
-            </button>
-          </div>
-
-          {/* 4 Quadrados Dedicados para cada Ticket com Pontuação em Branco */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            
-            {/* 1. QUADRADO IBOVESPA */}
-            <div className="p-4 bg-[#1a1a2e] text-white border border-white/10 rounded-2xl shadow-md hover:border-blue-500/40 transition-all flex flex-col justify-between group">
-              <div className="flex items-center justify-between gap-1 mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-md bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[10px] font-black uppercase tracking-wider">
-                    IBOV
-                  </span>
-                  <span className="text-[11px] text-zinc-300 font-bold">Ibovespa B3</span>
-                </div>
-                <span className={`text-[10px] font-black font-mono px-1.5 py-0.5 rounded ${
-                  liveTickers.ibovespa.variation.startsWith('+') 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                }`}>
-                  {liveTickers.ibovespa.variation}
-                </span>
-              </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-white tracking-tight">
-                {liveTickers.ibovespa.points}
-              </div>
-              <div className="mt-2 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-zinc-400">
-                <span>Principal índice de ações</span>
-                <span className="text-blue-400 font-bold">Bolsa BR</span>
-              </div>
-            </div>
-
-            {/* 2. QUADRADO DÓLAR COMERCIAL */}
-            <div className="p-4 bg-[#1a1a2e] text-white border border-white/10 rounded-2xl shadow-md hover:border-emerald-500/40 transition-all flex flex-col justify-between group">
-              <div className="flex items-center justify-between gap-1 mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-wider">
-                    DÓLAR
-                  </span>
-                  <span className="text-[11px] text-zinc-300 font-bold">Comercial USD</span>
-                </div>
-                <span className={`text-[10px] font-black font-mono px-1.5 py-0.5 rounded ${
-                  liveTickers.dolar.variation.startsWith('+') 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                }`}>
-                  {liveTickers.dolar.variation}
-                </span>
-              </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-white tracking-tight">
-                {liveTickers.dolar.value}
-              </div>
-              <div className="mt-2 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-zinc-400">
-                <span>Câmbio USD / BRL</span>
-                <span className="text-emerald-400 font-bold">PTAX Oficial</span>
-              </div>
-            </div>
-
-            {/* 3. QUADRADO TAXA SELIC */}
-            <div className="p-4 bg-[#1a1a2e] text-white border border-white/10 rounded-2xl shadow-md hover:border-purple-500/40 transition-all flex flex-col justify-between group">
-              <div className="flex items-center justify-between gap-1 mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 text-purple-400 text-[10px] font-black uppercase tracking-wider">
-                    SELIC
-                  </span>
-                  <span className="text-[11px] text-zinc-300 font-bold">Taxa Básica</span>
-                </div>
-                <span className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
-                  Copom
-                </span>
-              </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-white tracking-tight">
-                {liveTickers.selic.rate}
-              </div>
-              <div className="mt-2 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-zinc-400">
-                <span>Rendimento Benchmark</span>
-                <span className="text-purple-300 font-bold">100% CDI ≈ 13,90%</span>
-              </div>
-            </div>
-
-            {/* 4. QUADRADO BITCOIN */}
-            <div className="p-4 bg-[#1a1a2e] text-white border border-white/10 rounded-2xl shadow-md hover:border-amber-500/40 transition-all flex flex-col justify-between group">
-              <div className="flex items-center justify-between gap-1 mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-wider">
-                    BITCOIN
-                  </span>
-                  <span className="text-[11px] text-zinc-300 font-bold">Cripto (BTC)</span>
-                </div>
-                <span className={`text-[10px] font-black font-mono px-1.5 py-0.5 rounded ${
-                  liveTickers.bitcoin.variation.startsWith('+') 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                }`}>
-                  {liveTickers.bitcoin.variation}
-                </span>
-              </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-white tracking-tight">
-                {liveTickers.bitcoin.valueUsd}
-              </div>
-              <div className="mt-2 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-zinc-400">
-                <span className="font-mono">≈ {liveTickers.bitcoin.valueBrl}</span>
-                <span className="text-amber-400 font-bold">Global 24h</span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Botão de Destaque para Lançamento */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all cursor-pointer"
-            >
-              <Plus size={16} className="stroke-[3]" />
-              Novo Lançamento
-            </button>
-          </div>
-        </div>
-
         {/* Streamlined Main Subtabs Navigation Bar (Botões Pequenos) */}
-        <div id="investments-tab-nav" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 w-full mb-6 bg-[var(--card-bg)]/40 p-2 rounded-2xl border border-[var(--border-color)]">
+        <div id="investments-tab-nav" className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full mb-6 bg-[var(--card-bg)]/40 p-2 rounded-2xl border border-[var(--border-color)]">
           {[
-            { id: "briefing", label: "Briefing & Notícias", icon: <Newspaper size={14} className="text-blue-500" /> },
             { id: "carteira", label: `Minha Carteira (${calculatedAssets.length})`, icon: <Briefcase size={14} className="text-emerald-500" /> },
             { id: "lancamentos", label: "Histórico de Custódia", icon: <Layers size={14} className="text-indigo-500" /> },
             { id: "analise", label: "Análise IA B3", icon: <Sparkles size={14} className="text-amber-500" /> },
@@ -682,11 +489,6 @@ export default function InvestimentosTab() {
             );
           })}
         </div>
-
-        {/* --- 0. BRIEFING DE NOTÍCIAS & MERCADO --- */}
-        {activeSubTab === "briefing" && (
-          <MercadoBriefingTab />
-        )}
 
         {/* --- 7. ANÁLISE IA B3 (SEM DEPENDER DE TER TRANSAÇÕES) --- */}
         {activeSubTab === "analise" && (
@@ -758,7 +560,7 @@ export default function InvestimentosTab() {
         )}
 
         {/* --- PORTFOLIO EMPTY STATE (Only for portfolio sub-tabs if no transactions) --- */}
-        {activeSubTab !== "briefing" && activeSubTab !== "analise" && transactions.length === 0 ? (
+        {activeSubTab !== "analise" && transactions.length === 0 ? (
           <div className="py-16 px-4 flex flex-col items-center text-center justify-center bg-[var(--card-bg)]/20 border border-dashed border-[var(--border-color)] rounded-3xl max-w-lg mx-auto my-6 p-6">
             <div className="w-16 h-16 bg-blue-500/10 text-blue-500 flex items-center justify-center rounded-2xl border border-blue-500/20 mb-5">
               <Wallet size={28} />
@@ -782,7 +584,7 @@ export default function InvestimentosTab() {
               </button>
             </div>
           </div>
-        ) : activeSubTab !== "briefing" && activeSubTab !== "analise" && (
+        ) : activeSubTab !== "analise" && (
           <div>
             {/* SUB-TABS BODY CONTAINER */}
             

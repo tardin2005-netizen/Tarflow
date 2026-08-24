@@ -1,0 +1,17 @@
+{
+  "name": "Tarflow - Finanças & Tarefas",
+  "short_name": "Tarflow",
+  "description": "Controle financeiro pessoal, tarefas e investimentos em um só lugar.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "icons": [
+    {
+      "src": "tarflowicon.png",
+      "sizes": "1004x1004",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

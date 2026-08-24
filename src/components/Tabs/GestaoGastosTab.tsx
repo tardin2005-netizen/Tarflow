@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { 
-  ShoppingCart, PlusCircle, Target, Building2, 
+import {
+  ShoppingCart, PlusCircle, Target,
   CheckCircle, ArrowRight, Layers, LayoutGrid, Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import SupermercadoTab from "./SupermercadoTab";
 import ExtratosTab from "./ExtratosTab";
 import GoalsTab from "./GoalsTab";
-import OpenFinanceTab from "./OpenFinanceTab";
 import TasksTab from "./TasksTab";
 
-export type GastosSubTabId = "supermercado" | "extratos" | "metas" | "openfinance" | "tarefas";
+export type GastosSubTabId = "supermercado" | "extratos" | "metas" | "tarefas";
 
 interface Props {
   initialSubTab?: GastosSubTabId;
@@ -36,7 +35,6 @@ export default function GestaoGastosTab({ initialSubTab }: Props) {
     { id: "supermercado", label: "Supermercado", icon: ShoppingCart, desc: "Listagem de produtos, preços por rede e orçamento" },
     { id: "extratos", label: "Extratos & Lançamentos", icon: PlusCircle, desc: "Adicionar receitas, despesas manuais e importação" },
     { id: "metas", label: "Limites & Metas", icon: Target, desc: "Tetos orçamentários por categoria e limite mensal" },
-    { id: "openfinance", label: "Open Finance", icon: Building2, desc: "Conexão bancária automática e conciliação" },
     { id: "tarefas", label: "Tarefas & Contas", icon: CheckCircle, desc: "Controle de vencimentos e to-dos financeiros" }
   ];
 
@@ -61,12 +59,12 @@ export default function GestaoGastosTab({ initialSubTab }: Props) {
 
           <div className="text-[11px] font-black text-blue-500 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 self-start sm:self-auto flex items-center gap-1.5 shrink-0">
             <Sparkles size={12} />
-            <span>5 Módulos Integrados</span>
+            <span>4 Módulos Integrados</span>
           </div>
         </div>
 
         {/* Sub-tab buttons */}
-        <div className="flex overflow-x-auto gap-2 p-1 no-scrollbar scroll-smooth">
+        <div className="flex flex-wrap overflow-x-auto gap-2 p-1 pr-2 no-scrollbar scroll-smooth">
           {SUB_TABS.map(tab => {
             const Icon = tab.icon;
             const isActive = activeSubTab === tab.id;
@@ -101,7 +99,6 @@ export default function GestaoGastosTab({ initialSubTab }: Props) {
           {activeSubTab === "supermercado" && <SupermercadoTab />}
           {activeSubTab === "extratos" && <ExtratosTab />}
           {activeSubTab === "metas" && <GoalsTab />}
-          {activeSubTab === "openfinance" && <OpenFinanceTab />}
           {activeSubTab === "tarefas" && <TasksTab />}
         </motion.div>
       </AnimatePresence>

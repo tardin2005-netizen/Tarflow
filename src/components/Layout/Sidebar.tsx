@@ -19,20 +19,43 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sidebarPosition, onTogglePosition }: SidebarProps) {
   const user = auth.currentUser;
   const { theme, toggleTheme } = useTheme();
-  const { profile } = useUserProfile();
+  const { profile, updateProfile, addAchievement } = useUserProfile();
   const { t, i18n } = useTranslation();
-  
+
+  const handleInvite = async () => {
+    const shareData = {
+      title: 'Tarflow - Finanças & Tarefas',
+      text: 'Conheça o Tarflow, o app que organiza suas finanças e produtividade! 🌊',
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        alert("Link copiado para a área de transferência!");
+      }
+      if (user && profile) {
+        updateProfile({ referralCount: (profile.referralCount || 0) + 1 });
+        addAchievement('social_butterfly');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
   const navItems = [
     { id: "inicio", icon: <PieChart size={18} />, label: t("Início (Visão Geral)"), section: t("PRINCIPAL"), isSpecial: false },
-    { id: "gastos", icon: <Layers size={18} />, label: t("Gestão de Gastos"), section: t("PRINCIPAL"), tag: "5 Módulos", isSpecial: false },
-    { id: "investimentos", icon: <TrendingUp size={18} />, label: t("Mercado Financeiro"), section: t("PRINCIPAL"), tag: "B3 + Carteira", isSpecial: false },
-    
+    { id: "gastos", icon: <Layers size={18} />, label: t("Gestão de Gastos"), section: t("PRINCIPAL"), isSpecial: false },
+    { id: "mercado", icon: <TrendingUp size={18} />, label: t("Mercado Financeiro"), section: t("PRINCIPAL"), isSpecial: false },
+    { id: "investimentos", icon: <Building2 size={18} />, label: t("Investimentos"), section: t("PRINCIPAL"), isSpecial: false },
+
     { id: "perfil", icon: <User size={18} />, label: t("Perfil do Usuário"), section: t("CONTA & AJUSTES") },
-    { id: "share", icon: <Share2 size={18} />, label: t("Compartilhar dados"), section: t("CONTA & AJUSTES") },
-    
+    { id: "share", icon: <Share2 size={18} />, label: t("Compartilhar dados"), section: t("CONTA & AJUSTES"), onClick: handleInvite },
+
     { id: "sobre", icon: <Info size={18} />, label: t("Sobre o Tarflow"), section: t("SOBRE") },
     { id: "contato", icon: <MessageSquare size={18} />, label: t("Central de Feedback"), section: t("SOBRE") },
-    { id: "referral", icon: <Heart size={18} />, label: t("Indicar um amigo"), section: t("SOBRE") },
+    { id: "referral", icon: <Heart size={18} />, label: t("Indicar um amigo"), section: t("SOBRE"), onClick: handleInvite },
   ];
 
   if (activeTab === "welcome") {
@@ -83,7 +106,7 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sideb
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 overflow-hidden shrink-0">
                {user ? (
-                 <img src={profile?.avatar || user.photoURL || ""} alt={profile?.name || user.displayName || "User"} className="w-full h-full object-cover" />
+                 <img src={profile?.avatar || user.photoURL || ""} alt={profile?.name || user.displayName || "User"} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                ) : (
                  <User size={20} className="text-gray-400" />
                )}
@@ -120,7 +143,7 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sideb
             }
             
             const isItemActive = activeTab === item.id || 
-              (item.id === "gastos" && ["gastos", "supermercado", "extratos", "metas", "tarefas", "openfinance"].includes(activeTab));
+              (item.id === "gastos" && ["gastos", "supermercado", "extratos", "metas", "tarefas"].includes(activeTab));
 
             acc.push(
               <button
@@ -128,6 +151,7 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sideb
                 onClick={() => {
                   if ((item as any).onClick) {
                     (item as any).onClick();
+                    onClose();
                   } else {
                     onTabChange(item.id);
                     onClose();

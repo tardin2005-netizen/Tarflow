@@ -170,11 +170,11 @@ export default function Header({ onToggleSidebar, user, onLoginSuccess, sidebarP
               animate={{ opacity: 1 }}
               className="flex items-center gap-2 px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/10 border border-white/20 shrink-0 min-w-0"
             >
-              <div className={cn("w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs shadow overflow-hidden shrink-0", 
-                profile?.avatar ? "bg-white" : "bg-gradient-to-br from-[#2D73FF] to-[#0537D7]"
+              <div className={cn("w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs shadow overflow-hidden shrink-0",
+                (profile?.avatar || user.photoURL) ? "bg-white" : "bg-gradient-to-br from-[#2D73FF] to-[#0537D7]"
               )}>
-                {profile?.avatar ? (
-                  <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                {profile?.avatar || user.photoURL ? (
+                  <img src={profile?.avatar || user.photoURL || ""} alt="Avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                 ) : (
                   <span className="uppercase font-bold">{user.displayName?.[0] || user.email?.[0]}</span>
                 )}
