@@ -1843,17 +1843,17 @@ export default function InvestimentosTab() {
                     <div className="absolute left-0 right-0 top-[56px] bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl shadow-2xl z-[120] divide-y divide-[var(--border-color)] max-h-40 overflow-y-auto">
                       {autocompleteSuggestions.map((item) => (
                         <button
-                          key={item}
+                          key={item.code}
                           type="button"
                           onClick={() => selectSuggestion(item)}
                           className="w-full text-left p-2.5 hover:bg-zinc-500/5 flex items-center justify-between text-xs transition-colors"
                         >
                           <div className="flex items-center gap-1.5 font-mono">
-                            <span className="font-black text-blue-500">{item}</span>
-                            <span className="text-[9px] text-[var(--text-muted)] truncate max-w-[140px] font-sans">({B3_ASSET_DATABASE[item]?.name || item})</span>
+                            <span className="font-black text-blue-500">{item.code}</span>
+                            <span className="text-[9px] text-[var(--text-muted)] truncate max-w-[140px] font-sans">({item.name})</span>
                           </div>
                           <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">
-                            {B3_ASSET_DATABASE[item]?.category || "Ações"}
+                            {item.category}
                           </span>
                         </button>
                       ))}
