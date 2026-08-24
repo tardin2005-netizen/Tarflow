@@ -281,6 +281,26 @@ export default function InvestimentosTab() {
   const profitValue = totalPatrimony - totalCost;
   const profitPercentage = totalCost > 0 ? (profitValue / totalCost) * 100 : 0;
 
+  // Real CDI accumulated since the first transaction, to compare against the
+  // portfolio's actual return (no fabricated monthly waypoints).
+  const firstTransactionDate = useMemo(() => {
+    if (transactions.length === 0) return null;
+    return transactions.reduce((earliest, t) => (t.date < earliest ? t.date : earliest), transactions[0].date);
+  }, [transactions]);
+
+  const [cdiAccumulated, setCdiAccumulated] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!firstTransactionDate) {
+      setCdiAccumulated(null);
+      return;
+    }
+    fetch(apiUrl(`/api/market/cdi-accumulated?start=${firstTransactionDate}`))
+      .then(res => res.ok ? res.json() : null)
+      .then(data => setCdiAccumulated(data?.accumulatedPercent ?? null))
+      .catch(() => setCdiAccumulated(null));
+  }, [firstTransactionDate]);
+
   const totalDividendsReceived = useMemo(() => {
     return transactions
       .filter(t => t.type === "dividendo" && t.status !== "A Receber")
@@ -1324,10 +1344,13 @@ export default function InvestimentosTab() {
                       </div>
 
                       <div className="p-3 bg-zinc-500/5 border border-[var(--border-color)] rounded-xl">
-                        <span className="text-[8px] uppercase tracking-wider font-extrabold text-[var(--text-muted)]">Meta CDI Anual</span>
-                        <div className="text-xs font-black font-mono mt-0.5 text-amber-500">
-                          {profitPercentage >= 10.5 ? "Superando Benchmark em 10.5%" : "Em convergência com o mercado"}
+                        <span className="text-[8px] uppercase tracking-wider font-extrabold text-[var(--text-muted)]">
+                          CDI Acumulado {firstTransactionDate ? `desde ${new Date(firstTransactionDate + "T00:00:00").toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}` : "no Período"}
+                        </span>
+                        <div className="text-lg font-black font-mono mt-0.5 text-amber-500">
+                          {cdiAccumulated !== null ? `${cdiAccumulated >= 0 ? "+" : ""}${cdiAccumulated.toFixed(2)}%` : "Carregando..."}
                         </div>
+                        <span className="text-[9px] text-[var(--text-muted)] mt-0.5 block">Fonte: Banco Central do Brasil (SGS 4391)</span>
                       </div>
                     </div>
 
@@ -1336,28 +1359,44 @@ export default function InvestimentosTab() {
                     </p>
                   </div>
 
-                  {/* Comparisons Chart */}
-                  <div className="lg:col-span-7 bg-[var(--card-bg)] border border-[var(--border-color)] p-4 sm:p-5 rounded-2xl flex flex-col justify-between">
-                    <div className="border-b border-[var(--border-color)] pb-3 mb-4">
+                  {/* Real Comparison */}
+                  <div className="lg:col-span-7 bg-[var(--card-bg)] border border-[var(--border-color)] p-4 sm:p-5 rounded-2xl flex flex-col justify-center gap-4">
+                    <div className="border-b border-[var(--border-color)] pb-3">
                       <h3 className="text-xs font-black uppercase text-[var(--text-primary)]">Carteira x CDI de Mercado</h3>
+                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Comparação real desde seu primeiro lançamento — sem estimativas.</p>
                     </div>
 
-                    <div className="h-44 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={[
-                          { month: "Jan", Carteira: profitPercentage * 0.1, CDI: 1.0 },
-                          { month: "Fev", Carteira: profitPercentage * 0.35, CDI: 1.8 },
-                          { month: "Mar", Carteira: profitPercentage * 0.6, CDI: 3.1 },
-                          { month: "Hoje", Carteira: profitPercentage, CDI: 4.5 }
-                        ]}>
-                          <XAxis dataKey="month" tick={{ fontSize: 9 }} stroke="var(--text-muted)" />
-                          <YAxis tick={{ fontSize: 9 }} stroke="var(--text-muted)" />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="Carteira" stroke="#3b82f6" strokeWidth={2.5} name="Sua Carteira %" />
-                          <Line type="monotone" dataKey="CDI" stroke="#f59e0b" strokeWidth={1.5} name="CDI %" />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
+                    {cdiAccumulated === null ? (
+                      <p className="text-xs text-[var(--text-muted)] italic py-4 text-center">
+                        {firstTransactionDate ? "Buscando CDI real do Banco Central..." : "Adicione um lançamento para comparar com o CDI."}
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl text-center">
+                          <span className="text-[9px] uppercase font-black tracking-widest text-blue-500">Sua Carteira</span>
+                          <div className={`text-2xl font-black font-mono mt-1 ${profitPercentage >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                            {profitPercentage >= 0 ? "+" : ""}{profitPercentage.toFixed(2)}%
+                          </div>
+                        </div>
+                        <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl text-center">
+                          <span className="text-[9px] uppercase font-black tracking-widest text-amber-500">CDI no Período</span>
+                          <div className="text-2xl font-black font-mono mt-1 text-amber-500">
+                            {cdiAccumulated >= 0 ? "+" : ""}{cdiAccumulated.toFixed(2)}%
+                          </div>
+                        </div>
+                        <div className="col-span-2 text-center text-xs font-bold">
+                          {profitPercentage >= cdiAccumulated ? (
+                            <span className="text-emerald-500">
+                              ✓ Sua carteira está {(profitPercentage - cdiAccumulated).toFixed(2)} pontos percentuais acima do CDI
+                            </span>
+                          ) : (
+                            <span className="text-red-500">
+                              ⚠ Sua carteira está {(cdiAccumulated - profitPercentage).toFixed(2)} pontos percentuais abaixo do CDI
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                 </div>
@@ -1843,17 +1882,17 @@ export default function InvestimentosTab() {
                     <div className="absolute left-0 right-0 top-[56px] bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl shadow-2xl z-[120] divide-y divide-[var(--border-color)] max-h-40 overflow-y-auto">
                       {autocompleteSuggestions.map((item) => (
                         <button
-                          key={item}
+                          key={item.code}
                           type="button"
                           onClick={() => selectSuggestion(item)}
                           className="w-full text-left p-2.5 hover:bg-zinc-500/5 flex items-center justify-between text-xs transition-colors"
                         >
                           <div className="flex items-center gap-1.5 font-mono">
-                            <span className="font-black text-blue-500">{item}</span>
-                            <span className="text-[9px] text-[var(--text-muted)] truncate max-w-[140px] font-sans">({B3_ASSET_DATABASE[item]?.name || item})</span>
+                            <span className="font-black text-blue-500">{item.code}</span>
+                            <span className="text-[9px] text-[var(--text-muted)] truncate max-w-[140px] font-sans">({item.name})</span>
                           </div>
                           <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">
-                            {B3_ASSET_DATABASE[item]?.category || "Ações"}
+                            {item.category}
                           </span>
                         </button>
                       ))}
