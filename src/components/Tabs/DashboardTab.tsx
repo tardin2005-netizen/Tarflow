@@ -173,7 +173,13 @@ export default function DashboardTab() {
       </div>
 
       {/* Mini Dashboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 w-full">
+      <motion.div
+        key={`mini-${filter}-${customStart}-${customEnd}`}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 w-full"
+      >
         {/* Gasto no Período */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -237,7 +243,7 @@ export default function DashboardTab() {
             </div>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
 
       <div className="grid lg:grid-cols-5 gap-4 sm:gap-6 w-full min-w-0">
         {/* Main Left Section: Distribuição */}
@@ -353,7 +359,13 @@ export default function DashboardTab() {
               </AnimatePresence>
             </div>
             
-            <div className="flex flex-col items-center gap-6 w-full min-w-0 mt-4">
+            <motion.div
+              key={`dist-${filter}-${customStart}-${customEnd}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="flex flex-col items-center gap-6 w-full min-w-0 mt-4"
+            >
               
               {/* Top: Pie Chart */}
               <div className="w-[280px] sm:w-[320px] md:w-[380px] h-[280px] sm:h-[320px] md:h-[380px] relative shrink-0">
@@ -431,7 +443,7 @@ export default function DashboardTab() {
                   <p className="text-sm font-bold mt-1 text-[#667eea]">{stats.itemsCount} {stats.itemsCount === 1 ? 'item analisado' : 'itens analisados'}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
         </div>
