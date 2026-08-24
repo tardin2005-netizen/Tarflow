@@ -34,7 +34,7 @@ export const CATEGORY_COLORS_MAP: Record<string, string> = {
   'Transporte': '#FACC15', // Amarelo — táxi/atenção no trânsito
   'Combustível': '#EF4444', // Vermelho — posto de gasolina/alerta
   'Educação': '#6366F1', // Índigo — acadêmico
-  'Saúde': '#2DD4BF', // Verde-azulado — clínico, saúde
+  'Saúde': '#2563EB', // Azul royal — clínico, distinto do verde de Mercado/Investimentos
   'Lazer': '#C084FC', // Roxo claro — diversão
   'Viagem': '#0EA5E9', // Azul-céu — viagem
   'Vestuário': '#F472B6', // Rosa — moda
