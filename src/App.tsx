@@ -10,13 +10,14 @@ import AboutTab from "./components/Tabs/AboutTab";
 import ContactTab from "./components/Tabs/ContactTab";
 import WelcomeTab from "./components/Tabs/WelcomeTab";
 import InvestimentosTab from "./components/Tabs/InvestimentosTab";
+import MercadoFinanceiroTab from "./components/Tabs/MercadoFinanceiroTab";
 import AIChat from "./components/AI/AIChat";
 import { PlusCircle, BarChart2, PieChart, Target, CheckCircle, User, Info, MessageSquare, Building2, Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { auth } from "./lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 
-type TabId = "inicio" | "gastos" | "investimentos" | "perfil" | "sobre" | "contato" | "welcome" | "extratos" | "metas" | "tarefas" | "openfinance" | "supermercado";
+type TabId = "inicio" | "gastos" | "investimentos" | "mercado" | "perfil" | "sobre" | "contato" | "welcome" | "extratos" | "metas" | "tarefas" | "supermercado";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("inicio");
@@ -61,9 +62,9 @@ export default function App() {
       case "supermercado": return <GestaoGastosTab initialSubTab="supermercado" />;
       case "extratos": return <GestaoGastosTab initialSubTab="extratos" />;
       case "metas": return <GestaoGastosTab initialSubTab="metas" />;
-      case "openfinance": return <GestaoGastosTab initialSubTab="openfinance" />;
       case "tarefas": return <GestaoGastosTab initialSubTab="tarefas" />;
       case "investimentos": return <InvestimentosTab />;
+      case "mercado": return <MercadoFinanceiroTab />;
       case "perfil": return <ProfileTab />;
       case "sobre": return <AboutTab />;
       case "contato": return <ContactTab />;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { collection, addDoc, query, where, onSnapshot, deleteDoc, doc, updateDoc, setDoc } from "firebase/firestore";
 import { db, auth } from "../lib/firebase";
-import { Expense, Goal, Task, TaskList, UserProfile } from "../types";
+import { Expense, Goal, Task, TaskList, UserProfile, SupermarketProduct } from "../types";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 enum OperationType {
@@ -222,6 +222,48 @@ export function useTasks() {
   };
 
   return { taskLists, tasks, addTaskList, addTask, toggleTask, deleteTask, updateTask };
+}
+
+export function useSupermarketProducts() {
+  const [products, setProducts] = useState<SupermarketProduct[]>([]);
+  const [user, loading] = useAuthState(auth);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      setProducts([]);
+      return;
+    }
+    const q = query(collection(db, "supermarketProducts"), where("userId", "==", user.uid));
+    return onSnapshot(q, (snapshot) => {
+      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SupermarketProduct)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, "supermarketProducts");
+    });
+  }, [user, loading]);
+
+  const addProduct = async (product: Omit<SupermarketProduct, "id" | "userId" | "createdAt">) => {
+    if (!user) return;
+    try {
+      return await addDoc(collection(db, "supermarketProducts"), {
+        ...product,
+        userId: user.uid,
+        createdAt: new Date().toISOString()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, "supermarketProducts");
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    try {
+      return await deleteDoc(doc(db, "supermarketProducts", id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, "supermarketProducts");
+    }
+  };
+
+  return { products, addProduct, deleteProduct };
 }
 
 export function useUserProfile() {

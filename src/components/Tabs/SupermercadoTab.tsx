@@ -1,27 +1,16 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { 
-  ShoppingCart, Plus, Trash2, Search, Filter, TrendingDown,
-  TrendingUp, Store, ChevronRight, DollarSign, PieChart as PieIcon, 
-  Sparkles, Check, Edit2, AlertCircle, RefreshCw, Calendar as CalendarIcon,
-  HelpCircle, Database, ArrowUpRight
+import React, { useState, useMemo } from "react";
+import {
+  ShoppingCart, Plus, Trash2, Search, Store, TrendingDown,
+  PieChart as PieIcon, Edit2, Calendar as CalendarIcon,
+  Database, ChevronDown, ChevronRight, Award
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, PieChart, Pie, Cell, Legend
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
-
-// TypeScript core interfaces for supermarket management
-export interface SupermarketProduct {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  qty: number;
-  supermarket: string;
-  date: string; // YYYY-MM-DD
-  month: string; // YYYY-MM
-}
+import { useSupermarketProducts, useUserProfile } from "../../hooks/useFirebaseData";
+import { SupermarketProduct } from "../../types";
 
 const CATEGORIES = [
   { id: "Mercearia", label: "Mercearia", color: "#3b82f6" },
@@ -38,33 +27,45 @@ const POPULAR_SUPERMARKETS = [
   "Carrefour", "Pão de Açúcar", "Assaí Atacadista", "Atacadão", "Sonda", "Extra", "Pão de Açúcar Minuto", "Local / Bairro"
 ];
 
-// Base Oficial de Referência de Mercado (Experiência Real Salva)
-export const MARKET_PRICE_REFERENCE_BASE: SupermarketProduct[] = [
-  { id: "1", name: "Banana Prata (Kg)", category: "Hortifrúti", price: 8.90, qty: 1.2, supermarket: "Pão de Açúcar", date: "2026-06-15", month: "2026-06" },
-  { id: "2", name: "Detergente de Louça", category: "Limpeza", price: 2.10, qty: 4, supermarket: "Assaí Atacadista", date: "2026-06-14", month: "2026-06" },
-  { id: "3", name: "Detergente de Louça", category: "Limpeza", price: 2.45, qty: 2, supermarket: "Carrefour", date: "2026-06-12", month: "2026-06" },
-  { id: "4", name: "Café Torrado 500g", category: "Mercearia", price: 18.90, qty: 3, supermarket: "Carrefour", date: "2026-06-12", month: "2026-06" },
-  { id: "5", name: "Café Torrado 500g", category: "Mercearia", price: 17.50, qty: 2, supermarket: "Assaí Atacadista", date: "2026-06-14", month: "2026-06" },
-  { id: "6", name: "Papel Higiênico 12 un", category: "Higiene", price: 15.90, qty: 1, supermarket: "Assaí Atacadista", date: "2026-06-14", month: "2026-06" },
-  { id: "7", name: "Iogurte Natural", category: "Laticínios", price: 3.20, qty: 8, supermarket: "Sonda", date: "2026-06-05", month: "2026-06" },
-  { id: "8", name: "Tomate Italiano (Kg)", category: "Hortifrúti", price: 9.80, qty: 1.2, supermarket: "Sonda", date: "2026-06-05", month: "2026-06" },
-  { id: "9", name: "Arroz Integral 1kg", category: "Mercearia", price: 8.49, qty: 2, supermarket: "Pão de Açúcar", date: "2026-06-15", month: "2026-06" },
-  { id: "10", name: "Arroz Integral 1kg", category: "Mercearia", price: 7.99, qty: 1, supermarket: "Carrefour", date: "2026-06-10", month: "2026-06" },
-  { id: "11", name: "Feijão Carioca 1kg", category: "Mercearia", price: 9.20, qty: 2, supermarket: "Pão de Açúcar", date: "2026-06-15", month: "2026-06" },
-  { id: "12", name: "Feijão Carioca 1kg", category: "Mercearia", price: 8.50, qty: 3, supermarket: "Carrefour", date: "2026-06-12", month: "2026-06" },
-  { id: "13", name: "Leite Integral 1L", category: "Laticínios", price: 4.89, qty: 12, supermarket: "Assaí Atacadista", date: "2026-06-14", month: "2026-06" },
-  { id: "14", name: "Leite Integral 1L", category: "Laticínios", price: 5.49, qty: 6, supermarket: "Carrefour", date: "2026-06-12", month: "2026-06" },
-  { id: "15", name: "Leite Integral 1L", category: "Laticínios", price: 6.20, qty: 4, supermarket: "Pão de Açúcar", date: "2026-06-15", month: "2026-06" },
-  { id: "16", name: "Alcatra Premium (Kg)", category: "Carnes", price: 36.50, qty: 2.5, supermarket: "Assaí Atacadista", date: "2026-06-14", month: "2026-06" },
-  { id: "17", name: "Alcatra Premium (Kg)", category: "Carnes", price: 39.90, qty: 2, supermarket: "Carrefour", date: "2026-06-12", month: "2026-06" },
-  { id: "18", name: "Alcatra Premium (Kg)", category: "Carnes", price: 44.90, qty: 1.5, supermarket: "Pão de Açúcar", date: "2026-06-15", month: "2026-06" }
+// Base de referência de mercado usada SOMENTE como sugestão de autocomplete
+// (nome/categoria/preço estimado). Nunca é tratada como lançamento real do usuário.
+const MARKET_PRICE_SUGGESTIONS: { name: string; category: string; price: number }[] = [
+  { name: "Banana Prata (Kg)", category: "Hortifrúti", price: 8.90 },
+  { name: "Detergente de Louça", category: "Limpeza", price: 2.10 },
+  { name: "Café Torrado 500g", category: "Mercearia", price: 17.50 },
+  { name: "Papel Higiênico 12 un", category: "Higiene", price: 15.90 },
+  { name: "Iogurte Natural", category: "Laticínios", price: 3.20 },
+  { name: "Tomate Italiano (Kg)", category: "Hortifrúti", price: 9.80 },
+  { name: "Arroz Integral 1kg", category: "Mercearia", price: 7.99 },
+  { name: "Feijão Carioca 1kg", category: "Mercearia", price: 8.50 },
+  { name: "Leite Integral 1L", category: "Laticínios", price: 4.89 },
+  { name: "Alcatra Premium (Kg)", category: "Carnes", price: 36.50 }
 ];
 
+const MONTHS_PT = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+];
+
+const tooltipContentStyle = {
+  backgroundColor: "var(--card-bg)",
+  border: "1px solid var(--border-color)",
+  borderRadius: "12px",
+  color: "var(--text-primary)",
+  fontSize: "12px",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.25)"
+};
+const tooltipItemStyle = { color: "var(--text-primary)" };
+const tooltipLabelStyle = { color: "var(--text-muted)", fontWeight: 700 };
+
 export default function SupermercadoTab() {
-  const [products, setProducts] = useState<SupermarketProduct[]>(() => {
-    const saved = localStorage.getItem("tarflow_supermarket_products");
-    return saved ? JSON.parse(saved) : MARKET_PRICE_REFERENCE_BASE;
-  });
+  const { products, addProduct, deleteProduct } = useSupermarketProducts();
+  const { profile, updateProfile } = useUserProfile();
+
+  const supermarketLimit = profile?.supermarketLimit || 0;
+  const hasLimit = !!profile?.supermarketLimit && profile.supermarketLimit > 0;
+
+  const currentMonth = useMemo(() => new Date().toISOString().slice(0, 7), []);
 
   const [activeSubTab, setActiveSubTab] = useState<"compras" | "comparador" | "relatorios">("compras");
 
@@ -76,71 +77,65 @@ export default function SupermercadoTab() {
   const [newSupermarket, setNewSupermarket] = useState("Carrefour");
   const [newDate, setNewDate] = useState(() => new Date().toISOString().split("T")[0]);
 
-  // Autocomplete & Reference Helper
   const [isSuggestOpen, setIsSuggestOpen] = useState(false);
 
-  // Budget states
-  const [supermarketLimit, setSupermarketLimit] = useState<number>(() => {
-    const saved = localStorage.getItem("tarflow_supermarket_limit");
-    return saved ? Number(saved) : 800; // default 800 BRL
-  });
+  // Budget limit editing
   const [isEditingLimit, setIsEditingLimit] = useState(false);
-  const [tempLimit, setTempLimit] = useState(supermarketLimit.toString());
+  const [tempLimit, setTempLimit] = useState(supermarketLimit ? supermarketLimit.toString() : "");
 
   // Search and view filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("Todas");
   const [selectedSupermarketFilter, setSelectedSupermarketFilter] = useState("Todos");
-  const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>("2026-06");
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>(currentMonth);
 
-  // Sync back to local storage
-  useEffect(() => {
-    localStorage.setItem("tarflow_supermarket_products", JSON.stringify(products));
-  }, [products]);
+  // Price finder (item 6)
+  const [priceSearchQuery, setPriceSearchQuery] = useState("");
 
-  // Filter lists automatically
+  // Year/month history expansion (item 7)
+  const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>({});
+
   const uniqueMonths = useMemo(() => {
     const months = products.map(p => p.month);
-    return (Array.from(new Set(months)) as string[]).sort((a, b) => b.localeCompare(a));
-  }, [products]);
+    const withCurrent = new Set([...months, currentMonth]);
+    return (Array.from(withCurrent) as string[]).sort((a, b) => b.localeCompare(a));
+  }, [products, currentMonth]);
 
   const uniqueSupermarkets = useMemo(() => {
     const supers = products.map(p => p.supermarket);
     return Array.from(new Set(supers)).sort();
   }, [products]);
 
-  // Base suggestions for auto-filling prices
+  // Autocomplete suggestions: user's own history + static reference prices
   const baseSuggestions = useMemo(() => {
-    const map = new Map<string, { category: string; avgPrice: number; lastSupermarket: string; minPrice: number }>();
-    
-    // We combine all products from current + reference base
-    const all = [...products, ...MARKET_PRICE_REFERENCE_BASE];
-    all.forEach(p => {
+    const map = new Map<string, { category: string; lastSupermarket: string; minPrice: number }>();
+
+    products.forEach(p => {
       const key = p.name.trim();
       if (!map.has(key)) {
-        map.set(key, { category: p.category, avgPrice: p.price, lastSupermarket: p.supermarket, minPrice: p.price });
+        map.set(key, { category: p.category, lastSupermarket: p.supermarket, minPrice: p.price });
       } else {
         const curr = map.get(key)!;
-        curr.avgPrice = (curr.avgPrice + p.price) / 2;
         if (p.price < curr.minPrice) curr.minPrice = p.price;
       }
     });
 
-    return Array.from(map.entries()).map(([name, data]) => ({
-      name,
-      ...data
-    }));
+    MARKET_PRICE_SUGGESTIONS.forEach(s => {
+      if (!map.has(s.name)) {
+        map.set(s.name, { category: s.category, lastSupermarket: newSupermarket, minPrice: s.price });
+      }
+    });
+
+    return Array.from(map.entries()).map(([name, data]) => ({ name, ...data }));
   }, [products]);
 
-  // Filtered autocomplete list based on user typing
   const matchingSuggestions = useMemo(() => {
-    if (!newName.trim() || newName.length < 1) return [];
+    if (!newName.trim()) return [];
     return baseSuggestions
       .filter(s => s.name.toLowerCase().includes(newName.toLowerCase()))
       .slice(0, 5);
   }, [newName, baseSuggestions]);
 
-  // Apply suggestion
   const handleSelectSuggestion = (s: typeof baseSuggestions[0]) => {
     setNewName(s.name);
     setNewCategory(s.category);
@@ -149,17 +144,7 @@ export default function SupermercadoTab() {
     setIsSuggestOpen(false);
   };
 
-  // Reset / Restore Reference Base
-  const handleResetToBase = () => {
-    if (window.confirm("Deseja restaurar a Base de Preços de Referência da experiência real de mercado? Novos produtos adicionados serão reiniciados.")) {
-      setProducts(MARKET_PRICE_REFERENCE_BASE);
-      localStorage.setItem("tarflow_supermarket_products", JSON.stringify(MARKET_PRICE_REFERENCE_BASE));
-      setSelectedMonthFilter("2026-06");
-    }
-  };
-
-  // Handle Add Product
-  const handleAddProduct = (e: React.FormEvent) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newPrice || !newQty) return;
 
@@ -171,10 +156,9 @@ export default function SupermercadoTab() {
       return;
     }
 
-    const monthStr = newDate.substring(0, 7); // YYYY-MM
+    const monthStr = newDate.substring(0, 7);
 
-    const newProd: SupermarketProduct = {
-      id: Date.now().toString(),
+    await addProduct({
       name: newName.trim(),
       category: newCategory,
       price: parsedPrice,
@@ -182,35 +166,31 @@ export default function SupermercadoTab() {
       supermarket: newSupermarket,
       date: newDate,
       month: monthStr
-    };
+    });
 
-    setProducts(prev => [newProd, ...prev]);
     setNewName("");
     setNewPrice("");
     setNewQty("1");
     setIsSuggestOpen(false);
-    
-    // Auto populate month filter if needed
+
     if (!uniqueMonths.includes(monthStr)) {
       setSelectedMonthFilter(monthStr);
     }
   };
 
   const handleDeleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+    deleteProduct(id);
   };
 
-  // Limit management
-  const handleSaveLimit = () => {
+  const handleSaveLimit = async () => {
     const val = parseFloat(tempLimit);
     if (!isNaN(val) && val >= 0) {
-      setSupermarketLimit(val);
-      localStorage.setItem("tarflow_supermarket_limit", val.toString());
+      await updateProfile({ supermarketLimit: val });
       setIsEditingLimit(false);
     }
   };
 
-  // 1st Level Calculations: Total Monthly Expenses for the selected month
+  // Monthly calculations for the selected month
   const monthlyProducts = useMemo(() => {
     return products.filter(p => p.month === selectedMonthFilter);
   }, [products, selectedMonthFilter]);
@@ -224,7 +204,6 @@ export default function SupermercadoTab() {
     return Math.min(Math.round((totalMonthlySpent / supermarketLimit) * 100), 100);
   }, [totalMonthlySpent, supermarketLimit]);
 
-  // Filtered lists for rendering columns
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -232,7 +211,7 @@ export default function SupermercadoTab() {
       const matchesSupermarket = selectedSupermarketFilter === "Todos" || p.supermarket === selectedSupermarketFilter;
       const matchesMonth = p.month === selectedMonthFilter;
       return matchesSearch && matchesCategory && matchesSupermarket && matchesMonth;
-    });
+    }).sort((a, b) => b.date.localeCompare(a.date));
   }, [products, searchQuery, selectedCategoryFilter, selectedSupermarketFilter, selectedMonthFilter]);
 
   // Price Comparer calculations
@@ -245,20 +224,14 @@ export default function SupermercadoTab() {
       const existingKey = Object.keys(matrix).find(k => k.toLowerCase() === normName) || displayKey;
 
       if (!matrix[existingKey]) {
-        matrix[existingKey] = {
-          category: p.category,
-          stores: {}
-        };
+        matrix[existingKey] = { category: p.category, stores: {} };
       }
 
       const currentStorePrice = matrix[existingKey].stores[p.supermarket]?.price;
       const currentStoreDate = matrix[existingKey].stores[p.supermarket]?.date;
 
       if (!currentStorePrice || p.date >= currentStoreDate) {
-        matrix[existingKey].stores[p.supermarket] = {
-          price: p.price,
-          date: p.date
-        };
+        matrix[existingKey].stores[p.supermarket] = { price: p.price, date: p.date };
       }
     });
 
@@ -270,17 +243,10 @@ export default function SupermercadoTab() {
 
       let minPrice = Infinity;
       let minStore = "";
-      let maxPrice = -Infinity;
-      let maxStore = "";
-
       stores.forEach(s => {
         if (s.price < minPrice) {
           minPrice = s.price;
           minStore = s.store;
-        }
-        if (s.price > maxPrice) {
-          maxPrice = s.price;
-          maxStore = s.store;
         }
       });
 
@@ -290,14 +256,29 @@ export default function SupermercadoTab() {
         stores: data.stores,
         minPrice: minPrice === Infinity ? null : minPrice,
         minStore,
-        maxPrice: maxPrice === -Infinity ? null : maxPrice,
-        maxStore,
         storesCount: stores.length
       };
-    }).sort((a,b) => b.storesCount - a.storesCount || a.name.localeCompare(b.name));
+    }).sort((a, b) => b.storesCount - a.storesCount || a.name.localeCompare(b.name));
   }, [products]);
 
-  // Report calculations: Category sums
+  // Item 6: Simple lowest-price finder across all launched products
+  const priceSearchResults = useMemo(() => {
+    const q = priceSearchQuery.trim().toLowerCase();
+    if (!q) return [];
+
+    const matches = products.filter(p => p.name.toLowerCase().includes(q));
+    const byStore: Record<string, { store: string; minPrice: number; lastDate: string }> = {};
+
+    matches.forEach(p => {
+      if (!byStore[p.supermarket] || p.price < byStore[p.supermarket].minPrice) {
+        byStore[p.supermarket] = { store: p.supermarket, minPrice: p.price, lastDate: p.date };
+      }
+    });
+
+    return Object.values(byStore).sort((a, b) => a.minPrice - b.minPrice);
+  }, [priceSearchQuery, products]);
+
+  // Report calculations
   const categorySpendingData = useMemo(() => {
     const categorySums: Record<string, number> = {};
     monthlyProducts.forEach(p => {
@@ -320,18 +301,37 @@ export default function SupermercadoTab() {
     return Object.entries(superSums).map(([name, sum]) => ({
       name,
       value: Number(sum.toFixed(2))
-    })).sort((a,b) => b.value - a.value);
+    })).sort((a, b) => b.value - a.value);
   }, [monthlyProducts]);
 
-  // Translate Months to Portuguese
+  // Item 7: Full year -> month spending history (not just selected month)
+  const yearlyHistory = useMemo(() => {
+    const byYear: Record<string, Record<string, { total: number; count: number }>> = {};
+
+    products.forEach(p => {
+      if (!p.month) return;
+      const [year, month] = p.month.split("-");
+      if (!byYear[year]) byYear[year] = {};
+      if (!byYear[year][p.month]) byYear[year][p.month] = { total: 0, count: 0 };
+      byYear[year][p.month].total += p.price * p.qty;
+      byYear[year][p.month].count += 1;
+    });
+
+    return Object.entries(byYear)
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([year, months]) => ({
+        year,
+        months: Object.entries(months)
+          .sort((a, b) => b[0].localeCompare(a[0]))
+          .map(([monthKey, data]) => ({ monthKey, ...data })),
+        yearTotal: Object.values(months).reduce((sum, m) => sum + m.total, 0)
+      }));
+  }, [products]);
+
   const formatMonthName = (monthStr: string) => {
     if (!monthStr) return "";
     const [year, month] = monthStr.split("-");
-    const monthsPt = [
-      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-    ];
-    return `${monthsPt[parseInt(month) - 1]} / ${year}`;
+    return `${MONTHS_PT[parseInt(month) - 1]} / ${year}`;
   };
 
   return (
@@ -342,39 +342,31 @@ export default function SupermercadoTab() {
         <div className="absolute left-1/3 bottom-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
+          <div className="space-y-2 max-w-2xl min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="bg-white/15 text-white border border-white/20 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
                 <ShoppingCart size={11} className="text-amber-300" />
-                Base de Mercado Ativa
+                Seus Lançamentos
               </span>
-              <button
-                onClick={handleResetToBase}
-                className="bg-white/10 hover:bg-white/20 text-blue-100 hover:text-white border border-white/15 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition-all cursor-pointer"
-                title="Restaurar dados de referência salvos"
-              >
-                <RefreshCw size={10} />
-                Restaurar Base de Preços
-              </button>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight font-sans text-white">
               Controle de Supermercados
             </h1>
             <p className="text-xs sm:text-sm text-blue-100 font-sans leading-relaxed">
-              Base de preços e planejamento de compras do mês. Saiba exatamente os preços praticados por estabelecimento e projete seus gastos com precisão.
+              Registre suas compras reais e acompanhe os preços praticados por estabelecimento para planejar seus gastos com precisão.
             </p>
           </div>
 
           {/* Budget Limit Card */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 min-w-[240px] flex flex-col justify-between self-start md:self-auto shadow-inner">
+          <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 w-full md:w-auto md:min-w-[240px] flex flex-col justify-between self-start md:self-auto shadow-inner">
             <div className="flex items-center justify-between gap-2 border-b border-white/5 pb-2 mb-2">
               <span className="text-[10px] font-black tracking-wider uppercase text-blue-200">Limite de Gastos Mensal</span>
               {isEditingLimit ? (
-                <button onClick={handleSaveLimit} className="text-[10px] bg-white text-blue-700 px-2.5 py-0.5 rounded font-black hover:bg-zinc-100 transition-all cursor-pointer">
+                <button onClick={handleSaveLimit} className="text-[10px] bg-white text-blue-700 px-2.5 py-0.5 rounded font-black hover:bg-zinc-100 transition-all cursor-pointer shrink-0">
                   SALVAR
                 </button>
               ) : (
-                <button onClick={() => { setTempLimit(supermarketLimit.toString()); setIsEditingLimit(true); }} className="text-white/60 hover:text-white transition-all cursor-pointer">
+                <button onClick={() => { setTempLimit(supermarketLimit ? supermarketLimit.toString() : ""); setIsEditingLimit(true); }} className="text-white/60 hover:text-white transition-all cursor-pointer shrink-0">
                   <Edit2 size={12} />
                 </button>
               )}
@@ -382,27 +374,36 @@ export default function SupermercadoTab() {
 
             {isEditingLimit ? (
               <div className="flex gap-2">
-                <span className="text-lg font-black text-white/75 mt-0.5">R$</span>
+                <span className="text-lg font-black text-white/75 mt-0.5 shrink-0">R$</span>
                 <input
                   type="number"
+                  autoFocus
+                  placeholder="Ex: 800"
                   value={tempLimit}
                   onChange={e => setTempLimit(e.target.value)}
-                  className="w-full bg-white/20 border-0 outline-none rounded-lg p-1 text-base font-black text-white placeholder-white/30 font-mono"
+                  className="w-full min-w-0 bg-white/20 border-0 outline-none rounded-lg p-1 text-base font-black text-white placeholder-white/40 font-mono"
                 />
               </div>
+            ) : !hasLimit ? (
+              <button
+                onClick={() => { setTempLimit(""); setIsEditingLimit(true); }}
+                className="text-left text-sm font-black text-white/90 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                Defina seu limite mensal
+                <Edit2 size={12} className="shrink-0" />
+              </button>
             ) : (
               <div>
                 <span className="text-2xl font-black font-sans text-white">
                   R$ {supermarketLimit.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
-                <div className="mt-2 text-[10px] font-bold text-blue-200 flex justify-between items-center">
+                <div className="mt-2 text-[10px] font-bold text-blue-200 flex justify-between items-center gap-2">
                   <span>{limitConsumptionPercent}% consumido</span>
-                  <span>R$ {(supermarketLimit - totalMonthlySpent).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} restante</span>
+                  <span className="truncate">R$ {(supermarketLimit - totalMonthlySpent).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} restante</span>
                 </div>
-                {/* Visual Consumption Bar */}
                 <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden mt-1.5">
-                  <div 
-                    className="h-full transition-all duration-500 rounded-full" 
+                  <div
+                    className="h-full transition-all duration-500 rounded-full"
                     style={{ width: `${limitConsumptionPercent}%`, backgroundColor: limitConsumptionPercent > 90 ? "#ef4444" : limitConsumptionPercent > 70 ? "#f59e0b" : "#34d399" }}
                   />
                 </div>
@@ -414,29 +415,25 @@ export default function SupermercadoTab() {
 
       {/* Select Month and Tab Nav Grid */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[var(--card-bg)] border border-[var(--border-color)] p-4 rounded-2xl shadow-sm">
-        <div className="flex items-center gap-2">
-          <CalendarIcon size={14} className="text-blue-500" />
-          <span className="text-xs font-black uppercase text-[var(--text-muted)]">Período:</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <CalendarIcon size={14} className="text-blue-500 shrink-0" />
+          <span className="text-xs font-black uppercase text-[var(--text-muted)] shrink-0">Período:</span>
           <select
             value={selectedMonthFilter}
             onChange={e => setSelectedMonthFilter(e.target.value)}
-            className="bg-[var(--section-bg)] border border-[var(--border-color)] p-1.5 px-3 rounded-lg text-xs font-black text-[var(--text-primary)] outline-none cursor-pointer focus:border-blue-500 transition-all"
+            className="bg-[var(--section-bg)] border border-[var(--border-color)] p-1.5 px-3 rounded-lg text-xs font-black text-[var(--text-primary)] outline-none cursor-pointer focus:border-blue-500 transition-all min-w-0"
           >
-            {uniqueMonths.length === 0 ? (
-              <option value="2026-06">Junho / 2026</option>
-            ) : (
-              uniqueMonths.map(m => (
-                <option key={m} value={m}>{formatMonthName(m)}</option>
-              ))
-            )}
+            {uniqueMonths.map(m => (
+              <option key={m} value={m}>{formatMonthName(m)}</option>
+            ))}
           </select>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl p-1 gap-1 w-full sm:w-auto">
+        <div className="flex bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl p-1 gap-1 w-full sm:w-auto overflow-x-auto">
           <button
             onClick={() => setActiveSubTab("compras")}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-4 py-2 rounded-lg transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-4 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "compras" ? "bg-blue-600 text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
@@ -445,7 +442,7 @@ export default function SupermercadoTab() {
           </button>
           <button
             onClick={() => setActiveSubTab("comparador")}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-4 py-2 rounded-lg transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-4 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "comparador" ? "bg-blue-600 text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
@@ -454,19 +451,19 @@ export default function SupermercadoTab() {
           </button>
           <button
             onClick={() => setActiveSubTab("relatorios")}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-4 py-2 rounded-lg transition-all cursor-pointer ${
-              activeSubTab === "relatorios" ? "bg-blue-600 text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)] relative"
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-4 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              activeSubTab === "relatorios" ? "bg-blue-600 text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
             <PieIcon size={13} />
-            Estatísticas / IA
+            Estatísticas / Histórico
           </button>
         </div>
       </div>
 
       {/* CORE CONTENT RENDER */}
       <AnimatePresence mode="wait">
-        
+
         {/* SUBTAB 1: COMPRAS & LANÇAMENTO */}
         {activeSubTab === "compras" && (
           <motion.div
@@ -477,24 +474,21 @@ export default function SupermercadoTab() {
             className="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full min-w-0"
           >
             {/* Left Box: Form with Autocomplete Helper */}
-            <div className="xl:col-span-4 space-y-6">
+            <div className="xl:col-span-4 space-y-6 min-w-0">
               <div className="p-5 sm:p-6 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl shadow-sm space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-blue-500/10 text-blue-500 flex items-center justify-center rounded-lg">
+                    <div className="w-7 h-7 bg-blue-500/10 text-blue-500 flex items-center justify-center rounded-lg shrink-0">
                       <Plus size={15} />
                     </div>
                     <h3 className="text-sm font-black uppercase text-[var(--text-primary)] tracking-wide">Novo Item</h3>
                   </div>
-                  <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">
-                    Base Ativa
-                  </span>
                 </div>
 
                 <form onSubmit={handleAddProduct} className="space-y-4">
                   <div className="relative">
                     <label className="block text-[9px] uppercase font-black tracking-wider text-[var(--text-muted)] mb-1">
-                      Nome do Produto (com sugestão da base)
+                      Nome do Produto
                     </label>
                     <input
                       type="text"
@@ -509,26 +503,25 @@ export default function SupermercadoTab() {
                       className="w-full text-xs p-3 bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl font-bold outline-none focus:border-blue-500 text-[var(--text-primary)]"
                     />
 
-                    {/* Autocomplete Dropdown from user database */}
                     {isSuggestOpen && matchingSuggestions.length > 0 && (
                       <div className="absolute left-0 right-0 top-full mt-1 bg-[#1a1a2e] border border-blue-500/40 rounded-xl shadow-2xl z-50 overflow-hidden text-white">
                         <div className="p-2 bg-blue-600/20 border-b border-white/10 text-[9.5px] font-black text-blue-300 uppercase tracking-wider flex items-center justify-between">
-                          <span>Sugestões da sua Base de Preços</span>
+                          <span>Sugestões</span>
                           <span>Preço Estimado</span>
                         </div>
                         {matchingSuggestions.map((item, idx) => (
                           <div
                             key={idx}
                             onClick={() => handleSelectSuggestion(item)}
-                            className="p-2.5 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0 flex items-center justify-between transition-colors"
+                            className="p-2.5 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0 flex items-center justify-between gap-2 transition-colors"
                           >
-                            <div>
-                              <div className="text-xs font-bold text-white">{item.name}</div>
-                              <div className="text-[9px] text-zinc-400 font-sans">
+                            <div className="min-w-0">
+                              <div className="text-xs font-bold text-white truncate">{item.name}</div>
+                              <div className="text-[9px] text-zinc-400 font-sans truncate">
                                 {item.category} · {item.lastSupermarket}
                               </div>
                             </div>
-                            <div className="text-xs font-black font-mono text-emerald-400">
+                            <div className="text-xs font-black font-mono text-emerald-400 shrink-0">
                               R$ {item.minPrice.toFixed(2)}
                             </div>
                           </div>
@@ -612,29 +605,15 @@ export default function SupermercadoTab() {
                   </button>
                 </form>
               </div>
-
-              {/* Price Base Quick Card */}
-              <div className="p-4 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 border border-blue-500/15 rounded-2xl flex flex-col justify-between">
-                <div className="flex items-center gap-1.5 text-xs text-blue-500 font-extrabold mb-1">
-                  <Database size={13} />
-                  <span>BASE DE EXPERIÊNCIA DE MERCADO</span>
-                </div>
-                <p className="text-[11px] text-[var(--text-muted)] leading-relaxed mt-1">
-                  Sua experiência de mercado com Banana Prata, Detergente, Café Torrado, Leite e Carnes está salva. Sempre que você for ao mercado, pode usar esses dados para estimar o valor que irá gastar.
-                </p>
-              </div>
             </div>
 
-            {/* Right Box: Product Listing with Top Spending Indicator */}
+            {/* Right Box: Product Listing */}
             <div className="xl:col-span-8 flex flex-col space-y-4 w-full min-w-0">
-              
-              {/* Dynamic Filter Controls & TOP TOTAL MONTHLY SPENDING */}
+
               <div className="p-4 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between shadow-sm">
-                
-                {/* Search Bar + Top Total Monthly Spending Badge */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
-                  {/* Search Bar */}
-                  <div className="relative flex-1 min-w-[200px]">
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 min-w-0">
+                  <div className="relative flex-1 min-w-[150px]">
                     <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
                     <input
                       type="text"
@@ -645,25 +624,23 @@ export default function SupermercadoTab() {
                     />
                   </div>
 
-                  {/* Top Spending Indicator (Instantly Visible at the Top) */}
                   <div className="flex items-center justify-between sm:justify-start gap-2 px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shrink-0">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col min-w-0">
                       <span className="text-[9px] uppercase font-black tracking-wider text-blue-100 leading-none">
                         Gasto do Mês
                       </span>
-                      <span className="text-sm font-black font-mono text-white mt-0.5">
+                      <span className="text-sm font-black font-mono text-white mt-0.5 truncate">
                         R$ {totalMonthlySpent.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Filter Selects */}
                 <div className="flex flex-wrap items-center gap-2 justify-end">
                   <select
                     value={selectedCategoryFilter}
                     onChange={e => setSelectedCategoryFilter(e.target.value)}
-                    className="p-2 bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl text-xs font-black text-[var(--text-muted)] outline-none focus:border-blue-500 cursor-pointer"
+                    className="p-2 bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl text-xs font-black text-[var(--text-muted)] outline-none focus:border-blue-500 cursor-pointer min-w-0"
                   >
                     <option value="Todas">Categorias (Todas)</option>
                     {CATEGORIES.map(cat => (
@@ -674,7 +651,7 @@ export default function SupermercadoTab() {
                   <select
                     value={selectedSupermarketFilter}
                     onChange={e => setSelectedSupermarketFilter(e.target.value)}
-                    className="p-2 bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl text-xs font-black text-[var(--text-muted)] outline-none focus:border-blue-500 cursor-pointer"
+                    className="p-2 bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl text-xs font-black text-[var(--text-muted)] outline-none focus:border-blue-500 cursor-pointer min-w-0"
                   >
                     <option value="Todos">Mercados (Todos)</option>
                     {uniqueSupermarkets.map(s => (
@@ -685,8 +662,8 @@ export default function SupermercadoTab() {
 
               </div>
 
-              {/* Table list */}
-              <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-sm flex flex-col flex-grow">
+              {/* Desktop Table View */}
+              <div className="hidden md:flex bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-sm flex-col flex-grow">
                 <div className="overflow-x-auto min-h-[350px]">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -720,7 +697,7 @@ export default function SupermercadoTab() {
                               <td className="p-3.5 pl-5 font-black">{prod.name}</td>
                               <td className="p-3.5 whitespace-nowrap">
                                 <span className="flex items-center gap-1.5">
-                                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: catColor }} />
+                                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: catColor }} />
                                   <span className="text-[10.5px]">{prod.category}</span>
                                 </span>
                               </td>
@@ -730,7 +707,7 @@ export default function SupermercadoTab() {
                               <td className="p-3.5 text-center font-mono">{prod.qty}</td>
                               <td className="p-3.5 whitespace-nowrap">
                                 <span className="flex items-center gap-1 font-sans text-xs bg-zinc-500/10 px-2 py-0.5 rounded text-[var(--text-primary)] w-fit">
-                                  <Store size={10} className="text-blue-500" />
+                                  <Store size={10} className="text-blue-500 shrink-0" />
                                   {prod.supermarket}
                                 </span>
                               </td>
@@ -743,7 +720,7 @@ export default function SupermercadoTab() {
                               <td className="p-3.5 text-center">
                                 <button
                                   onClick={() => handleDeleteProduct(prod.id)}
-                                  className="text-red-500 hover:text-red-700 bg-red-500/5 hover:bg-red-500/15 p-1.5 rounded-lg transition-all cursor-pointer"
+                                  className="text-red-500 hover:text-red-700 bg-red-500/5 hover:bg-red-500/15 p-1.5 rounded-lg transition-all cursor-pointer shrink-0"
                                   title="Excluir produto"
                                 >
                                   <Trash2 size={13} />
@@ -757,17 +734,67 @@ export default function SupermercadoTab() {
                   </table>
                 </div>
 
-                {/* Sub-summary bottom */}
-                <div className="p-3.5 pl-5 bg-zinc-500/5 border-t border-[var(--border-color)] flex items-center justify-between text-xs text-[var(--text-muted)] font-bold">
-                  <span>Itens listados: <strong className="text-[var(--text-primary)]">{filteredProducts.length}</strong></span>
-                  <span>Soma da lista: <strong className="text-blue-500 font-mono">R$ {filteredProducts.reduce((sum, p) => sum + (p.price*p.qty), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                <div className="p-3.5 pl-5 bg-zinc-500/5 border-t border-[var(--border-color)] flex items-center justify-between text-xs text-[var(--text-muted)] font-bold gap-2">
+                  <span className="truncate">Itens listados: <strong className="text-[var(--text-primary)]">{filteredProducts.length}</strong></span>
+                  <span className="truncate">Soma da lista: <strong className="text-blue-500 font-mono">R$ {filteredProducts.reduce((sum, p) => sum + (p.price * p.qty), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                </div>
+              </div>
+
+              {/* Mobile Card List View */}
+              <div className="md:hidden bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-sm">
+                {filteredProducts.length === 0 ? (
+                  <div className="text-center py-16 text-[var(--text-muted)] text-xs px-4">
+                    <ShoppingCart size={24} className="opacity-20 mb-2 mx-auto" />
+                    <p className="font-black">Sem produtos neste mês ou filtro</p>
+                    <p className="text-[10px] mt-1">Insira compras no formulário acima para visualizar os produtos aqui.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[var(--border-color)]">
+                    {filteredProducts.map(prod => {
+                      const catColor = CATEGORIES.find(c => c.id === prod.category)?.color || "#888888";
+                      return (
+                        <div key={prod.id} className="p-4 flex items-center justify-between gap-2 min-w-0">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-black text-xs text-[var(--text-primary)] truncate">{prod.name}</div>
+                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                              <span className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+                                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: catColor }} />
+                                {prod.category}
+                              </span>
+                              <span className="text-[10px] text-[var(--text-muted)]">· {prod.supermarket}</span>
+                              <span className="text-[10px] text-[var(--text-muted)] font-mono">· {prod.date.split("-").reverse().join("/")}</span>
+                            </div>
+                            <div className="text-[10px] text-[var(--text-muted)] font-mono mt-1">
+                              {prod.qty}x R$ {prod.price.toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs font-black font-mono text-blue-500 whitespace-nowrap">
+                              R$ {(prod.price * prod.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <button
+                              onClick={() => handleDeleteProduct(prod.id)}
+                              className="text-red-500 hover:text-red-700 bg-red-500/5 hover:bg-red-500/15 p-1.5 rounded-lg transition-all cursor-pointer shrink-0"
+                              title="Excluir produto"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="p-3.5 bg-zinc-500/5 border-t border-[var(--border-color)] flex items-center justify-between text-[10px] text-[var(--text-muted)] font-bold gap-2">
+                  <span className="truncate">Itens: <strong className="text-[var(--text-primary)]">{filteredProducts.length}</strong></span>
+                  <span className="truncate">Soma: <strong className="text-blue-500 font-mono">R$ {filteredProducts.reduce((sum, p) => sum + (p.price * p.qty), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
                 </div>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* SUBTAB 2: PRICE COMPARATOR MATRIX */}
+        {/* SUBTAB 2: PRICE COMPARATOR MATRIX + LOWEST PRICE FINDER */}
         {activeSubTab === "comparador" && (
           <motion.div
             key="comparador-subtab"
@@ -776,10 +803,49 @@ export default function SupermercadoTab() {
             exit={{ opacity: 0, y: -15 }}
             className="space-y-4 w-full min-w-0"
           >
+            {/* Item 6: Lowest price finder */}
+            <div className="p-5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl space-y-3">
+              <h4 className="text-sm font-black text-[var(--text-primary)] uppercase flex items-center gap-1.5">
+                <TrendingDown size={15} className="text-emerald-500 shrink-0" />
+                Buscar Menor Preço
+              </h4>
+              <div className="relative">
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                <input
+                  type="text"
+                  value={priceSearchQuery}
+                  onChange={e => setPriceSearchQuery(e.target.value)}
+                  placeholder="Ex: Iogurte, Café, Arroz..."
+                  className="w-full text-xs p-3 pl-9 bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl outline-none focus:border-blue-500 font-bold text-[var(--text-primary)]"
+                />
+              </div>
+
+              {priceSearchQuery.trim() && (
+                priceSearchResults.length === 0 ? (
+                  <p className="text-xs text-[var(--text-muted)] italic py-2">Nenhum produto lançado com esse nome ainda.</p>
+                ) : (
+                  <div className="space-y-1.5 pt-1">
+                    {priceSearchResults.map((r, idx) => (
+                      <div
+                        key={r.store}
+                        className={`flex items-center justify-between gap-2 p-2.5 rounded-xl text-xs ${idx === 0 ? "bg-emerald-500/10 border border-emerald-500/25" : "bg-zinc-500/5"}`}
+                      >
+                        <span className={`flex items-center gap-1.5 min-w-0 font-bold ${idx === 0 ? "text-emerald-500" : "text-[var(--text-primary)]"}`}>
+                          {idx === 0 && <Award size={13} className="shrink-0" />}
+                          <span className="truncate">{r.store}</span>
+                        </span>
+                        <span className="font-mono font-black shrink-0">R$ {r.minPrice.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+
             <div className="p-5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <h4 className="text-sm font-black text-[var(--text-primary)] uppercase flex items-center gap-1.5">
-                  <Store size={15} className="text-blue-500" />
+                  <Store size={15} className="text-blue-500 shrink-0" />
                   Matriz Comparativa de Estabelecimentos
                 </h4>
                 <p className="text-xs text-[var(--text-muted)]">
@@ -787,100 +853,191 @@ export default function SupermercadoTab() {
                 </p>
               </div>
 
-              <div className="text-[11px] font-mono text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              <div className="text-[11px] font-mono text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shrink-0">
                 {priceMatrix.length} itens monitorados
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {priceMatrix.map(item => (
-                <div key={item.name} className="p-4 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl space-y-3 shadow-sm">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h5 className="font-black text-sm text-[var(--text-primary)]">{item.name}</h5>
-                      <span className="text-[10px] text-[var(--text-muted)]">{item.category}</span>
+            {priceMatrix.length === 0 ? (
+              <div className="p-10 text-center text-xs text-[var(--text-muted)] bg-[var(--card-bg)]/40 border border-dashed border-[var(--border-color)] rounded-2xl">
+                Lance produtos em mais de um supermercado para começar a comparar preços.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {priceMatrix.map(item => (
+                  <div key={item.name} className="p-4 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl space-y-3 shadow-sm min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h5 className="font-black text-sm text-[var(--text-primary)] truncate">{item.name}</h5>
+                        <span className="text-[10px] text-[var(--text-muted)]">{item.category}</span>
+                      </div>
+                      {item.minPrice !== null && (
+                        <span className="text-xs font-black font-mono text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded shrink-0">
+                          Min: R$ {item.minPrice.toFixed(2)}
+                        </span>
+                      )}
                     </div>
-                    {item.minPrice !== null && (
-                      <span className="text-xs font-black font-mono text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">
-                        Min: R$ {item.minPrice.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
 
-                  <div className="space-y-1.5 pt-2 border-t border-[var(--border-color)]">
-                    {Object.entries(item.stores).map(([store, data]: [string, any]) => {
-                      const isLowest = data.price === item.minPrice && item.storesCount > 1;
-                      return (
-                        <div key={store} className="flex items-center justify-between text-xs">
-                          <span className={`flex items-center gap-1 ${isLowest ? "font-black text-emerald-500" : "text-[var(--text-muted)]"}`}>
-                            {store}
-                            {isLowest && <span className="text-[9px] bg-emerald-500/20 text-emerald-500 px-1.5 rounded font-black">Melhor</span>}
-                          </span>
-                          <span className="font-mono font-bold text-[var(--text-primary)]">
-                            R$ {data.price.toFixed(2)}
-                          </span>
-                        </div>
-                      );
-                    })}
+                    <div className="space-y-1.5 pt-2 border-t border-[var(--border-color)]">
+                      {Object.entries(item.stores).map(([store, data]: [string, any]) => {
+                        const isLowest = data.price === item.minPrice && item.storesCount > 1;
+                        return (
+                          <div key={store} className="flex items-center justify-between gap-2 text-xs">
+                            <span className={`flex items-center gap-1 min-w-0 truncate ${isLowest ? "font-black text-emerald-500" : "text-[var(--text-muted)]"}`}>
+                              <span className="truncate">{store}</span>
+                              {isLowest && <span className="text-[9px] bg-emerald-500/20 text-emerald-500 px-1.5 rounded font-black shrink-0">Melhor</span>}
+                            </span>
+                            <span className="font-mono font-bold text-[var(--text-primary)] shrink-0">
+                              R$ {data.price.toFixed(2)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
 
-        {/* SUBTAB 3: REPORTS */}
+        {/* SUBTAB 3: REPORTS + YEAR/MONTH HISTORY */}
         {activeSubTab === "relatorios" && (
           <motion.div
             key="relatorios-subtab"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full min-w-0"
+            className="space-y-6 w-full min-w-0"
           >
-            {/* Spending by category chart */}
-            <div className="p-5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl shadow-sm space-y-4">
-              <h4 className="text-xs font-black uppercase text-[var(--text-primary)] tracking-wider">
-                Gastos por Categoria ({formatMonthName(selectedMonthFilter)})
-              </h4>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categorySpendingData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {categorySpendingData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: any) => `R$ ${Number(value).toFixed(2)}`} />
-                  </PieChart>
-                </ResponsiveContainer>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full min-w-0">
+              {/* Spending by category chart */}
+              <div className="p-5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl shadow-sm space-y-4 min-w-0">
+                <h4 className="text-xs font-black uppercase text-[var(--text-primary)] tracking-wider truncate">
+                  Gastos por Categoria ({formatMonthName(selectedMonthFilter)})
+                </h4>
+                {categorySpendingData.length === 0 ? (
+                  <div className="h-64 flex items-center justify-center text-xs text-[var(--text-muted)] italic">
+                    Sem dados neste mês
+                  </div>
+                ) : (
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={categorySpendingData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {categorySpendingData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value: any) => `R$ ${Number(value).toFixed(2)}`}
+                          contentStyle={tooltipContentStyle}
+                          itemStyle={tooltipItemStyle}
+                          labelStyle={tooltipLabelStyle}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
+              {/* Spending by supermarket */}
+              <div className="p-5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl shadow-sm space-y-4 min-w-0">
+                <h4 className="text-xs font-black uppercase text-[var(--text-primary)] tracking-wider truncate">
+                  Gastos por Supermercado ({formatMonthName(selectedMonthFilter)})
+                </h4>
+                {supermarketSpendingData.length === 0 ? (
+                  <div className="h-64 flex items-center justify-center text-xs text-[var(--text-muted)] italic">
+                    Sem dados neste mês
+                  </div>
+                ) : (
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={supermarketSpendingData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--text-muted)" }} angle={-25} textAnchor="end" />
+                        <YAxis tick={{ fontSize: 10, fill: "var(--text-muted)" }} />
+                        <Tooltip
+                          formatter={(value: any) => `R$ ${Number(value).toFixed(2)}`}
+                          contentStyle={tooltipContentStyle}
+                          itemStyle={tooltipItemStyle}
+                          labelStyle={tooltipLabelStyle}
+                          cursor={{ fill: "var(--border-color)", opacity: 0.3 }}
+                        />
+                        <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Spending by supermarket */}
-            <div className="p-5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl shadow-sm space-y-4">
-              <h4 className="text-xs font-black uppercase text-[var(--text-primary)] tracking-wider">
-                Gastos por Supermercado ({formatMonthName(selectedMonthFilter)})
-              </h4>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={supermarketSpendingData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-25} textAnchor="end" />
-                    <YAxis tick={{ fontSize: 10 }} />
-                    <Tooltip formatter={(value: any) => `R$ ${Number(value).toFixed(2)}`} />
-                    <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+            {/* Item 7: Year -> Month history accordion */}
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-sm">
+              <div className="p-4 border-b border-[var(--border-color)] bg-zinc-500/5">
+                <h4 className="text-xs font-black uppercase text-[var(--text-primary)] tracking-wider">
+                  Histórico de Gastos por Ano
+                </h4>
+                <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                  Seus lançamentos de meses anteriores continuam disponíveis aqui, organizados por ano.
+                </p>
               </div>
+
+              {yearlyHistory.length === 0 ? (
+                <div className="text-center py-10 text-xs text-[var(--text-muted)] italic">
+                  Nenhum histórico registrado ainda.
+                </div>
+              ) : (
+                <div className="divide-y divide-[var(--border-color)]">
+                  {yearlyHistory.map(yearData => {
+                    const isExpanded = expandedYears[yearData.year] !== false;
+                    return (
+                      <div key={yearData.year}>
+                        <button
+                          onClick={() => setExpandedYears(prev => ({ ...prev, [yearData.year]: !isExpanded }))}
+                          className="w-full p-3.5 flex items-center justify-between gap-2 hover:bg-zinc-500/5 transition-colors cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2 text-xs font-black text-[var(--text-primary)]">
+                            {isExpanded ? <ChevronDown size={14} className="shrink-0" /> : <ChevronRight size={14} className="shrink-0" />}
+                            {yearData.year}
+                          </span>
+                          <span className="text-xs font-mono font-black text-blue-500 shrink-0">
+                            R$ {yearData.yearTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </button>
+
+                        {isExpanded && (
+                          <div className="pb-2">
+                            {yearData.months.map(m => (
+                              <button
+                                key={m.monthKey}
+                                onClick={() => setSelectedMonthFilter(m.monthKey)}
+                                className={`w-full flex items-center justify-between gap-2 px-4 sm:pl-10 py-2.5 text-xs hover:bg-blue-500/5 transition-colors cursor-pointer ${selectedMonthFilter === m.monthKey ? "bg-blue-500/10" : ""}`}
+                              >
+                                <span className="text-[var(--text-muted)] font-bold truncate">{formatMonthName(m.monthKey)}</span>
+                                <span className="flex items-center gap-3 shrink-0">
+                                  <span className="text-[10px] text-[var(--text-muted)]">{m.count} {m.count === 1 ? "item" : "itens"}</span>
+                                  <span className="font-mono font-black text-[var(--text-primary)]">
+                                    R$ {m.total.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </motion.div>
         )}

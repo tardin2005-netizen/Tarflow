@@ -70,9 +70,27 @@
         "referralCount": { "type": "number" },
         "plannerPhone": { "type": "string" },
         "plannerStep": { "type": "number" },
-        "riskProfile": { "type": "string" }
+        "riskProfile": { "type": "string" },
+        "supermarketLimit": { "type": "number" }
       },
       "required": ["userId", "name"]
+    },
+    "supermarketProduct": {
+      "title": "SupermarketProduct",
+      "description": "A single supermarket purchase line item",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "qty": { "type": "number" },
+        "supermarket": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "month": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "category", "price", "qty", "supermarket", "date", "month"]
     }
   },
   "firestore": {
@@ -95,6 +113,10 @@
     "users": {
       "schema": "userProfile",
       "description": "Private user profiles"
+    },
+    "supermarketProducts": {
+      "schema": "supermarketProduct",
+      "description": "User supermarket purchase line items"
     }
   }
 }

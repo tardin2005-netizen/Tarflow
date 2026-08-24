@@ -150,13 +150,13 @@ export default function AIDashboardInsights() {
             <Sparkles size={20} className="animate-pulse" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-black text-[var(--text-primary)] flex flex-wrap items-center gap-1.5 leading-none">
+            <h3 className="text-base sm:text-lg font-black text-[var(--text-primary)] flex flex-wrap items-center gap-x-2 gap-y-1.5 leading-snug">
               Insight Inteligente Tarflow
               <span className="text-[9px] font-black uppercase bg-[#667eea]/10 text-[#667eea] border border-[#667eea]/20 px-2 py-0.5 rounded-full select-none">
                 AI powered
               </span>
             </h3>
-            <p className="text-[11px] text-[var(--text-muted)] mt-1">Análise inteligente de economias e gestão de fluxo de tarefas pelo Gemini</p>
+            <p className="text-[11px] text-[var(--text-muted)] mt-2 leading-relaxed">Análise inteligente de economias e gestão de fluxo de tarefas pelo Gemini</p>
           </div>
         </div>
 

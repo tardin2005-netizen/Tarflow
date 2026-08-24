@@ -16,7 +16,7 @@ export default function BottomNavbar({ activeTab, onTabChange, onToggleSidebar }
     onTabChange("extratos");
   };
 
-  const isGastosActive = activeTab === "gastos" || activeTab === "supermercado" || activeTab === "metas" || activeTab === "tarefas" || activeTab === "openfinance";
+  const isGastosActive = activeTab === "gastos" || activeTab === "supermercado" || activeTab === "metas" || activeTab === "tarefas";
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[999] p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] flex justify-center pointer-events-none md:hidden animate-fade-in">

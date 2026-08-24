@@ -96,6 +96,27 @@ service cloud.firestore {
       allow get: if isOwner(resource.data.userId);
     }
 
+    // --- Supermarket Products ---
+    match /supermarketProducts/{productId} {
+      function isValidProduct(data) {
+        return data.userId is string &&
+               data.name is string && data.name.size() <= 200 &&
+               data.category is string && data.category.size() <= 50 &&
+               data.price is number && data.price >= 0 &&
+               data.qty is number && data.qty > 0 &&
+               data.supermarket is string && data.supermarket.size() <= 100 &&
+               data.date is string && data.date.size() <= 20 &&
+               data.month is string && data.month.size() <= 10;
+      }
+
+      allow create: if isOwner(incoming().userId) && isValidProduct(incoming());
+      allow update: if isOwner(existing().userId) && isOwner(incoming().userId) &&
+                      isValidProduct(incoming());
+      allow delete: if isOwner(existing().userId);
+      allow list: if isOwner(resource.data.userId);
+      allow get: if isOwner(resource.data.userId);
+    }
+
     // --- Users ---
     match /users/{userId} {
       function isValidProfile(data) {
@@ -109,7 +130,7 @@ service cloud.firestore {
                         'name', 'age', 'salary', 'area', 'achievements',
                         'referralCount', 'averageIncome', 'profession',
                         'avatar', 'email', 'streak', 'lastActive', 'isPublic',
-                        'plannerPhone', 'plannerStep', 'riskProfile'
+                        'plannerPhone', 'plannerStep', 'riskProfile', 'supermarketLimit'
                       ]);
       allow read: if isOwner(userId);
     }

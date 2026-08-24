@@ -1,11 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { CATEGORIES, CATEGORY_COLORS_MAP } from "../../constants/categories";
-import { useExpenses, useGoals } from "../../hooks/useFirebaseData";
+import { useExpenses, useGoals, useSupermarketProducts } from "../../hooks/useFirebaseData";
 import { cn, formatCurrency } from "../../lib/utils";
 import { ExpenseItem } from "../ExpenseItem";
-import AIDashboardInsights from "../AI/AIDashboardInsights";
 import { motion, AnimatePresence } from "motion/react";
-import { TrendingUp, Wallet, ArrowUpRight, Filter, X, PieChart as PieIcon, Calendar, History, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { TrendingUp, Wallet, ArrowUpRight, Filter, X, PieChart as PieIcon, Calendar, History, CheckCircle, AlertCircle, Clock, ChevronDown, ShoppingCart } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useTranslation } from "react-i18next";
 
@@ -23,7 +22,9 @@ const FILTER_LABELS: Record<FilterType, string> = {
 export default function DashboardTab() {
   const { expenses, deleteExpense, updateExpense } = useExpenses();
   const { goals } = useGoals();
+  const { products: supermarketProducts } = useSupermarketProducts();
   const { t } = useTranslation();
+  const [expandedHistoryMonth, setExpandedHistoryMonth] = useState<string | null>(null);
 
   // Reset to default on every page load/update as requested by user
   const [filter, setFilter] = useState<FilterType>("all");
@@ -149,6 +150,19 @@ export default function DashboardTab() {
 
   const recentExpenses = [...filteredExpenses].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
 
+  // Drill-down detail for a selected month in "Histórico Mensal de Gastos" (item 11)
+  const historyMonthDetail = useMemo(() => {
+    if (!expandedHistoryMonth) return null;
+    const monthExpenses = expenses
+      .filter(e => e.date && e.date.startsWith(expandedHistoryMonth))
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const monthSupermarketProducts = supermarketProducts
+      .filter(p => p.month === expandedHistoryMonth)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const supermarketTotal = monthSupermarketProducts.reduce((sum, p) => sum + (p.price * p.qty), 0);
+    return { monthExpenses, monthSupermarketProducts, supermarketTotal };
+  }, [expandedHistoryMonth, expenses, supermarketProducts]);
+
   return (
     <div className="tab-content flex flex-col gap-4 sm:gap-6 w-full overflow-x-hidden">
       <div className="w-full flex justify-center py-4 mb-2">
@@ -226,9 +240,9 @@ export default function DashboardTab() {
       </div>
 
       <div className="grid lg:grid-cols-5 gap-4 sm:gap-6 w-full min-w-0">
-        {/* Main Left Section: Distribuição & Histórico Mensal */}
+        {/* Main Left Section: Distribuição */}
         <div className="lg:col-span-3 space-y-4 sm:space-y-6 min-w-0">
-          
+
           {/* Distribuição Card */}
           <div className="bg-[var(--section-bg)] rounded-3xl p-5 sm:p-6 shadow-sm border-2 border-[var(--border-color)] overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6 relative z-20" ref={filterRef}>
@@ -382,7 +396,7 @@ export default function DashboardTab() {
                         className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full shrink-0 shadow-sm" 
                         style={{ backgroundColor: color }}
                       />
-                      <span className="font-bold text-[11px] sm:text-[13px] tracking-tight" style={{ color: color }}>
+                      <span className="font-bold text-[11px] sm:text-[13px] tracking-tight text-[var(--text-primary)]">
                         {cat.name}
                       </span>
                     </div>
@@ -402,7 +416,7 @@ export default function DashboardTab() {
                   {stats.topCategoria ? (
                     <>
                       <h3 className="text-lg sm:text-xl font-black text-[var(--text-primary)] truncate">{stats.topCategoria.name}</h3>
-                      <p className="text-sm font-bold mt-1" style={{ color: CATEGORY_COLORS_MAP[stats.topCategoria.originalId] || '#10B981' }}>{formatCurrency(stats.topCategoria.value)}</p>
+                      <p className="text-sm font-bold mt-1 text-[var(--text-primary)]">{formatCurrency(stats.topCategoria.value)}</p>
                     </>
                   ) : (
                     <p className="text-sm font-bold text-[var(--text-muted)] italic">Nenhum dado</p>
@@ -420,91 +434,9 @@ export default function DashboardTab() {
             </div>
           </div>
 
-          {/* Histórico Mensal de Gastos */}
-          <div className="bg-[var(--section-bg)] rounded-3xl p-5 sm:p-6 shadow-sm border-2 border-[var(--border-color)]">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2.5">
-                <History size={20} className="text-blue-500" />
-                <h2 className="text-lg font-black tracking-tight text-[var(--text-primary)]">
-                  Histórico Mensal de Gastos
-                </h2>
-              </div>
-              <span className="text-[11px] font-bold text-[var(--text-muted)]">
-                {monthlyHistory.length} {monthlyHistory.length === 1 ? 'mês registrado' : 'meses registrados'}
-              </span>
-            </div>
-
-            <p className="text-xs text-[var(--text-muted)] mb-4">
-              Acompanhe quanto você gastou a cada mês e confira se ficou dentro do limite geral estipulado.
-            </p>
-
-            <div className="space-y-3">
-              {monthlyHistory.length === 0 ? (
-                <div className="text-center py-6 text-[var(--text-muted)] text-xs italic">
-                  Nenhum registro histórico de gastos encontrado.
-                </div>
-              ) : (
-                monthlyHistory.map((m) => (
-                  <div 
-                    key={m.monthKey} 
-                    className="p-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-blue-500/40 transition-all"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-black text-xs shrink-0">
-                        <Calendar size={18} />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-black text-[var(--text-primary)] truncate">{m.label}</h4>
-                        <span className="text-[11px] text-[var(--text-muted)] font-medium">
-                          {m.count} {m.count === 1 ? 'transação' : 'transações'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                      <div className="text-left sm:text-right">
-                        <div className="text-sm font-black text-[var(--text-primary)]">
-                          {formatCurrency(m.total)}
-                        </div>
-                        {m.limit > 0 && (
-                          <div className="text-[10px] text-[var(--text-muted)] font-bold">
-                            Teto: {formatCurrency(m.limit)}
-                          </div>
-                        )}
-                      </div>
-
-                      {m.limit > 0 && (
-                        <div className="shrink-0">
-                          <span className={cn(
-                            "px-2.5 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1",
-                            m.isOver 
-                              ? "bg-red-500/10 text-red-500 border border-red-500/20" 
-                              : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                          )}>
-                            {m.isOver ? (
-                              <>
-                                <AlertCircle size={10} />
-                                <span>{Math.round(m.percent)}% (Acima)</span>
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle size={10} />
-                                <span>{Math.round(m.percent)}% (No limite)</span>
-                              </>
-                            )}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
         </div>
 
-        {/* Right Section: Recent Expenses & Tips */}
+        {/* Right Section: Registros Recentes & Histórico Mensal (alinhados) */}
         <div className="lg:col-span-2 min-w-0 space-y-4 sm:space-y-6">
           <div className="bg-[var(--section-bg)] rounded-3xl p-4 sm:p-6 shadow-sm border-2 border-[var(--border-color)] overflow-hidden min-w-0">
             <div className="flex items-center justify-between mb-4">
@@ -512,7 +444,7 @@ export default function DashboardTab() {
                 <PieIcon size={20} className="text-[#667eea]" /> Registros Recentes
               </h2>
             </div>
-            
+
             <div className="space-y-3">
               <AnimatePresence initial={false}>
                 {recentExpenses.length === 0 ? (
@@ -520,7 +452,7 @@ export default function DashboardTab() {
                 ) : (
                   recentExpenses.map((exp) => (
                     <motion.div key={exp.id} exit={{ opacity: 0, x: 20 }}>
-                      <ExpenseItem 
+                      <ExpenseItem
                         expense={exp}
                         updateExpense={updateExpense}
                         deleteExpense={deleteExpense}
@@ -542,7 +474,144 @@ export default function DashboardTab() {
             )}
           </div>
 
-          <AIDashboardInsights />
+          {/* Histórico Mensal de Gastos */}
+          <div className="bg-[var(--section-bg)] rounded-3xl p-5 sm:p-6 shadow-sm border-2 border-[var(--border-color)] min-w-0">
+            <div className="flex items-center justify-between mb-4 gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <History size={20} className="text-blue-500 shrink-0" />
+                <h2 className="text-lg font-black tracking-tight text-[var(--text-primary)] truncate">
+                  Histórico Mensal de Gastos
+                </h2>
+              </div>
+              <span className="text-[11px] font-bold text-[var(--text-muted)] shrink-0">
+                {monthlyHistory.length} {monthlyHistory.length === 1 ? 'mês' : 'meses'}
+              </span>
+            </div>
+
+            <p className="text-xs text-[var(--text-muted)] mb-4">
+              Acompanhe quanto você gastou a cada mês e confira se ficou dentro do limite geral estipulado.
+            </p>
+
+            <div className="space-y-3">
+              {monthlyHistory.length === 0 ? (
+                <div className="text-center py-6 text-[var(--text-muted)] text-xs italic">
+                  Nenhum registro histórico de gastos encontrado.
+                </div>
+              ) : (
+                monthlyHistory.map((m) => {
+                  const isOpen = expandedHistoryMonth === m.monthKey;
+                  return (
+                    <div
+                      key={m.monthKey}
+                      className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] hover:border-blue-500/40 transition-all min-w-0 overflow-hidden"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setExpandedHistoryMonth(isOpen ? null : m.monthKey)}
+                        className="w-full p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0 cursor-pointer text-left"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-black text-xs shrink-0">
+                            <Calendar size={18} />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-black text-[var(--text-primary)] truncate">{m.label}</h4>
+                            <span className="text-[11px] text-[var(--text-muted)] font-medium">
+                              {m.count} {m.count === 1 ? 'transação' : 'transações'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                          <div className="text-left sm:text-right">
+                            <div className="text-sm font-black text-[var(--text-primary)]">
+                              {formatCurrency(m.total)}
+                            </div>
+                            {m.limit > 0 && (
+                              <div className="text-[10px] text-[var(--text-muted)] font-bold">
+                                Teto: {formatCurrency(m.limit)}
+                              </div>
+                            )}
+                          </div>
+
+                          {m.limit > 0 && (
+                            <div className="shrink-0">
+                              <span className={cn(
+                                "px-2.5 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1",
+                                m.isOver
+                                  ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                                  : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                              )}>
+                                {m.isOver ? (
+                                  <>
+                                    <AlertCircle size={10} />
+                                    <span>{Math.round(m.percent)}% (Acima)</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle size={10} />
+                                    <span>{Math.round(m.percent)}% (No limite)</span>
+                                  </>
+                                )}
+                              </span>
+                            </div>
+                          )}
+
+                          <ChevronDown size={16} className={cn("text-[var(--text-muted)] shrink-0 transition-transform", isOpen && "rotate-180")} />
+                        </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {isOpen && historyMonthDetail && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden border-t border-[var(--border-color)]"
+                          >
+                            <div className="p-4 space-y-4">
+                              {/* Supermarket summary for this month */}
+                              {historyMonthDetail.monthSupermarketProducts.length > 0 && (
+                                <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/15 flex items-center justify-between gap-2">
+                                  <span className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-primary)] min-w-0">
+                                    <ShoppingCart size={13} className="text-blue-500 shrink-0" />
+                                    <span className="truncate">Supermercado: {historyMonthDetail.monthSupermarketProducts.length} itens</span>
+                                  </span>
+                                  <span className="text-xs font-black font-mono text-blue-500 shrink-0">
+                                    {formatCurrency(historyMonthDetail.supermarketTotal)}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Full expense list for this month */}
+                              <div className="space-y-2">
+                                {historyMonthDetail.monthExpenses.length === 0 ? (
+                                  <p className="text-xs text-[var(--text-muted)] italic text-center py-2">
+                                    Nenhum lançamento detalhado neste mês.
+                                  </p>
+                                ) : (
+                                  historyMonthDetail.monthExpenses.map((exp) => (
+                                    <ExpenseItem
+                                      key={exp.id}
+                                      expense={exp}
+                                      updateExpense={updateExpense}
+                                      deleteExpense={deleteExpense}
+                                      allowDelete={false}
+                                      delay={0}
+                                    />
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

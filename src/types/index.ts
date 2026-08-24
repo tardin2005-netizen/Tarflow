@@ -71,6 +71,20 @@ export interface UserProfile {
   plannerPhone?: string;
   plannerStep?: number;
   riskProfile?: string;
+  supermarketLimit?: number;
+}
+
+export interface SupermarketProduct {
+  id: string;
+  userId: string;
+  name: string;
+  category: string;
+  price: number;
+  qty: number;
+  supermarket: string;
+  date: string; // YYYY-MM-DD
+  month: string; // YYYY-MM
+  createdAt: string;
 }
 
 export const ACHIEVEMENT_LIST = [
