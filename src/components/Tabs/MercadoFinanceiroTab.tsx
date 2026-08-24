@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { TrendingUp, RefreshCw, Newspaper } from "lucide-react";
 import MercadoBriefingTab from "./MercadoBriefingTab";
+import { apiUrl } from "../../lib/apiBase";
 
 export default function MercadoFinanceiroTab() {
   // Live Market Extension state (Bitcoin, Dólar, Ibovespa, Selic)
@@ -22,7 +23,7 @@ export default function MercadoFinanceiroTab() {
   const fetchLiveTickers = async () => {
     setIsTickersLoading(true);
     try {
-      const res = await fetch("/api/market/live-tickers");
+      const res = await fetch(apiUrl("/api/market/live-tickers"));
       if (res.ok) {
         const data = await res.json();
         setLiveTickers(data);

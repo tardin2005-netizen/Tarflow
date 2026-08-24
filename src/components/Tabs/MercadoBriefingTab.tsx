@@ -6,6 +6,7 @@ import {
   Building2, Coins, Landmark, RefreshCw
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { apiUrl } from "../../lib/apiBase";
 
 interface MarketSummaryData {
   date: string;
@@ -132,7 +133,7 @@ export default function MercadoBriefingTab() {
   const handleFetchDailyNews = async () => {
     setIsUpdating(true);
     try {
-      const response = await fetch("/api/briefing/daily-news", {
+      const response = await fetch(apiUrl("/api/briefing/daily-news"), {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });

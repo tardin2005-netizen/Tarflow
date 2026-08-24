@@ -3,6 +3,7 @@ import { MessageSquare, Send, X, Bot, Sparkles, TrendingUp, CheckCircle, AlertCi
 import { useExpenses, useTasks, useGoals, useUserProfile } from "../../hooks/useFirebaseData";
 import { User as FirebaseUser } from "firebase/auth";
 import { cn, formatCurrency } from "../../lib/utils";
+import { apiUrl } from "../../lib/apiBase";
 
 interface Message {
   role: "user" | "assistant";
@@ -59,7 +60,7 @@ export default function AIChat({ user }: { user: FirebaseUser | null | undefined
       const totalSpentMonth = expenses.reduce((acc, e) => acc + e.value, 0);
       const generalGoal = goals.find(g => g.category === 'GERAL')?.amount || 0;
 
-      const response = await fetch("/api/ai/chat", {
+      const response = await fetch(apiUrl("/api/ai/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
