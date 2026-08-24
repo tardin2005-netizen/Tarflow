@@ -116,7 +116,8 @@ export default function ExtratosTab() {
       Data: e.date,
       Categoria: e.category,
       Descrição: e.name,
-      Valor: e.value
+      Valor: e.value,
+      Banco: e.bank || ""
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
