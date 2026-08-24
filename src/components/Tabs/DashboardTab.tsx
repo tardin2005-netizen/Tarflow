@@ -173,12 +173,12 @@ export default function DashboardTab() {
       </div>
 
       {/* Mini Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 w-full">
         {/* Gasto no Período */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-br from-[#2C5F7C] to-[#1a1a2e] p-5 sm:p-6 rounded-3xl text-white shadow-xl relative overflow-hidden"
+          className="lg:col-span-3 bg-gradient-to-br from-[#2C5F7C] to-[#1a1a2e] p-5 sm:p-6 rounded-3xl text-white shadow-xl relative overflow-hidden"
         >
           <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-40 transition-opacity">
             <img src="/tarflowicon.png" alt="Tarflow Icon" className="w-8 h-8 drop-shadow-lg" />
@@ -203,11 +203,11 @@ export default function DashboardTab() {
         </motion.div>
 
         {/* Limite Geral Mensal */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.05 }}
-          className="bg-gradient-to-br from-[#1a1a2e] to-[#24244d] p-5 sm:p-6 rounded-3xl border-2 border-white/5 shadow-xl text-white overflow-hidden relative"
+          className="lg:col-span-2 bg-gradient-to-br from-[#1a1a2e] to-[#24244d] p-5 sm:p-6 rounded-3xl border-2 border-white/5 shadow-xl text-white overflow-hidden relative"
         >
           <div className="absolute -top-4 -right-4 opacity-5 rotate-12 pointer-events-none">
             <TrendingUp size={100} />

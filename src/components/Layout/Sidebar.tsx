@@ -24,9 +24,9 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sideb
   
   const navItems = [
     { id: "inicio", icon: <PieChart size={18} />, label: t("Início (Visão Geral)"), section: t("PRINCIPAL"), isSpecial: false },
-    { id: "gastos", icon: <Layers size={18} />, label: t("Gestão de Gastos"), section: t("PRINCIPAL"), tag: "5 Módulos", isSpecial: false },
-    { id: "mercado", icon: <TrendingUp size={18} />, label: t("Mercado Financeiro"), section: t("PRINCIPAL"), tag: "Cotações", isSpecial: false },
-    { id: "investimentos", icon: <Building2 size={18} />, label: t("Investimentos"), section: t("PRINCIPAL"), tag: "B3 + Carteira", isSpecial: false },
+    { id: "gastos", icon: <Layers size={18} />, label: t("Gestão de Gastos"), section: t("PRINCIPAL"), isSpecial: false },
+    { id: "mercado", icon: <TrendingUp size={18} />, label: t("Mercado Financeiro"), section: t("PRINCIPAL"), isSpecial: false },
+    { id: "investimentos", icon: <Building2 size={18} />, label: t("Investimentos"), section: t("PRINCIPAL"), isSpecial: false },
     
     { id: "perfil", icon: <User size={18} />, label: t("Perfil do Usuário"), section: t("CONTA & AJUSTES") },
     { id: "share", icon: <Share2 size={18} />, label: t("Compartilhar dados"), section: t("CONTA & AJUSTES") },

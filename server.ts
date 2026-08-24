@@ -227,14 +227,15 @@ app.get("/api/market/live-tickers", async (req, res) => {
     }
 
     try {
-      // Fetch Bitcoin from CoinGecko or Binance public ticker
-      const btcRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl&include_24hr_change=true", { signal: AbortSignal.timeout(3000) });
+      // Fetch Bitcoin from Binance's public ticker (no key, generous rate limit, real-time trade price).
+      // CoinGecko's free tier gets rate-limited (429) very easily, which was leaving this stuck on the fallback value.
+      const btcRes = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", { signal: AbortSignal.timeout(3000) });
       if (btcRes.ok) {
         const btcData = await btcRes.json();
-        if (btcData?.bitcoin) {
-          const usdVal = btcData.bitcoin.usd;
-          const brlVal = btcData.bitcoin.brl;
-          const change24h = btcData.bitcoin.usd_24h_change || 0;
+        const usdVal = parseFloat(btcData?.lastPrice);
+        const change24h = parseFloat(btcData?.priceChangePercent);
+        if (!isNaN(usdVal)) {
+          const brlVal = usdVal * dolar.raw;
           bitcoin = {
             valueUsd: `US$ ${usdVal.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
             valueBrl: `R$ ${brlVal.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`,
@@ -242,9 +243,30 @@ app.get("/api/market/live-tickers", async (req, res) => {
             rawUsd: usdVal
           };
         }
+      } else {
+        throw new Error("binance_unavailable");
       }
     } catch (e) {
-      // fallback preserved
+      // Fallback: CoinGecko (may be rate-limited, kept as a second attempt only)
+      try {
+        const btcRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl&include_24hr_change=true", { signal: AbortSignal.timeout(3000) });
+        if (btcRes.ok) {
+          const btcData = await btcRes.json();
+          if (btcData?.bitcoin) {
+            const usdVal = btcData.bitcoin.usd;
+            const brlVal = btcData.bitcoin.brl;
+            const change24h = btcData.bitcoin.usd_24h_change || 0;
+            bitcoin = {
+              valueUsd: `US$ ${usdVal.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+              valueBrl: `R$ ${brlVal.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`,
+              variation: `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2).replace('.', ',')}%`,
+              rawUsd: usdVal
+            };
+          }
+        }
+      } catch (e2) {
+        // fallback preserved
+      }
     }
 
     try {
