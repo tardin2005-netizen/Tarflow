@@ -322,6 +322,47 @@ app.get("/api/market/live-tickers", async (req, res) => {
   }
 });
 
+// Real accumulated CDI between a start date and today, for comparing against
+// portfolio performance (replaces a previously hardcoded/fake comparison).
+app.get("/api/market/cdi-accumulated", async (req, res) => {
+  try {
+    const startParam = String(req.query.start || "");
+    const startDate = new Date(startParam);
+    if (isNaN(startDate.getTime())) {
+      return res.status(400).json({ error: "Invalid or missing 'start' date (expected YYYY-MM-DD)" });
+    }
+
+    const toBcbDate = (d: Date) => {
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      return `${dd}/${mm}/${d.getFullYear()}`;
+    };
+
+    const dataInicial = toBcbDate(startDate);
+    const dataFinal = toBcbDate(new Date());
+
+    // BCB SGS 4391: CDI accumulated per month (%)
+    const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.4391/dados?dataInicial=${dataInicial}&dataFinal=${dataFinal}&formato=json`;
+    const bcbRes = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!bcbRes.ok) throw new Error("BCB request failed");
+    const monthly: { data: string; valor: string }[] = await bcbRes.json();
+
+    const accumulatedFactor = monthly.reduce((factor, m) => {
+      const rate = parseFloat(m.valor);
+      return isNaN(rate) ? factor : factor * (1 + rate / 100);
+    }, 1);
+
+    res.json({
+      accumulatedPercent: (accumulatedFactor - 1) * 100,
+      monthsCount: monthly.length,
+      since: startParam
+    });
+  } catch (error: any) {
+    console.error("CDI Accumulated Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/briefing/daily-news", async (req, res) => {
   try {
     const ai = getGemini();
