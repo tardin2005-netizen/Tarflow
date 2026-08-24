@@ -5,6 +5,7 @@ import { formatCurrency, cn } from "../../lib/utils";
 import { ExpenseItem } from "../ExpenseItem";
 import { CategoryId } from "../../types";
 import { Trash2, Download, List, ArrowUpDown, Plus, DollarSign, Calendar, Tag, ListFilter, Clock, Building2 } from "lucide-react";
+import CustomSelect from "../CustomSelect";
 import * as XLSX from "xlsx";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
@@ -209,21 +210,15 @@ export default function ExtratosTab() {
                   <label className="block mb-1.5 ml-1 text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider">
                     Parcelas
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Clock size={16} className="text-[#667eea] opacity-80" />
-                    </div>
-                    <select
-                      value={installments}
-                      onChange={(e) => setInstallments(parseInt(e.target.value))}
-                      className="w-full py-3.5 pl-10 pr-2 bg-[var(--card-bg)] border-2 border-[var(--border-color)] rounded-2xl text-[var(--text-primary)] focus:border-[#667eea] outline-none transition-all font-bold text-xs appearance-none cursor-pointer"
-                    >
-                      <option value={1}>À vista (1x)</option>
-                      {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
-                        <option key={num} value={num}>{num}x</option>
-                      ))}
-                    </select>
-                  </div>
+                  <CustomSelect
+                    value={String(installments)}
+                    onChange={(v) => setInstallments(parseInt(v))}
+                    icon={<Clock size={16} className="text-[#667eea] opacity-80" />}
+                    options={[
+                      { value: "1", label: "À vista (1x)" },
+                      ...[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => ({ value: String(num), label: `${num}x` }))
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -232,21 +227,15 @@ export default function ExtratosTab() {
                   <label className="block mb-1.5 ml-1 text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider">
                     Instituição/Banco <span className="opacity-60 text-[9px]">(Opcional)</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Building2 size={16} className="text-[#667eea] opacity-80" />
-                    </div>
-                    <select
-                      value={bank}
-                      onChange={(e) => setBank(e.target.value)}
-                      className="w-full py-3.5 pl-10 pr-2 bg-[var(--card-bg)] border-2 border-[var(--border-color)] rounded-2xl text-[var(--text-primary)] focus:border-[#667eea] outline-none transition-all font-bold text-xs appearance-none cursor-pointer"
-                    >
-                      <option value="">Nenhum / Manual</option>
-                      {POPULAR_BANKS.map((b) => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <CustomSelect
+                    value={bank}
+                    onChange={setBank}
+                    icon={<Building2 size={16} className="text-[#667eea] opacity-80" />}
+                    options={[
+                      { value: "", label: "Nenhum / Manual" },
+                      ...POPULAR_BANKS.map(b => ({ value: b.id, label: b.name }))
+                    ]}
+                  />
                 </div>
 
                 <div>
@@ -275,28 +264,22 @@ export default function ExtratosTab() {
                       </button>
                     </div>
                   ) : (
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <ListFilter size={16} className="text-[#667eea] opacity-80" />
-                      </div>
-                      <select 
-                        value={selectedCategory}
-                        onChange={(e) => {
-                          if (e.target.value === "CUSTOM") {
-                            setIsCustomMode(true);
-                          } else {
-                            setSelectedCategory(e.target.value);
-                          }
-                        }}
-                        className="w-full py-3.5 pl-10 pr-2 bg-[var(--card-bg)] border-2 border-[var(--border-color)] rounded-2xl text-[var(--text-primary)] focus:border-[#667eea] outline-none transition-all font-bold appearance-none cursor-pointer text-xs"
-                      >
-                        <option value="">Selecione...</option>
-                        {CATEGORIES.map(cat => (
-                          <option key={cat.id} value={cat.id}>{cat.label}</option>
-                        ))}
-                        <option value="CUSTOM">+ Outra</option>
-                      </select>
-                    </div>
+                    <CustomSelect
+                      value={selectedCategory}
+                      onChange={(v) => {
+                        if (v === "CUSTOM") {
+                          setIsCustomMode(true);
+                        } else {
+                          setSelectedCategory(v);
+                        }
+                      }}
+                      icon={<ListFilter size={16} className="text-[#667eea] opacity-80" />}
+                      options={[
+                        { value: "", label: "Selecione..." },
+                        ...CATEGORIES.map(cat => ({ value: cat.id, label: cat.label })),
+                        { value: "CUSTOM", label: "+ Outra" }
+                      ]}
+                    />
                   )}
                 </div>
               </div>

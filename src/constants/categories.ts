@@ -14,7 +14,7 @@ export const CATEGORIES: Category[] = [
   { id: 'Beleza', icon: '💄', label: 'Beleza' },
   { id: 'Pets', icon: '🐶', label: 'Pets' },
   { id: 'Casa', icon: '🏠', label: 'Casa' },
-  { id: 'Contas Fixas', icon: '📄', label: 'Fixas' },
+  { id: 'Contas Fixas', icon: '📄', label: 'Despesas Fixas' },
   { id: 'Assinaturas', icon: '📺', label: 'Assinaturas' },
   { id: 'Investimentos', icon: '📈', label: 'Investimentos' },
   { id: 'Presentes', icon: '🎁', label: 'Presentes' },
