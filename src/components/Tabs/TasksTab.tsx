@@ -4,6 +4,7 @@ import { Plus, Trash2, CheckCircle2, Circle, Flag, Calendar, Clock, DollarSign, 
 import { cn, formatCurrency, formatDate } from "../../lib/utils";
 import { Priority, Task } from "../../types";
 import { motion, AnimatePresence } from "motion/react";
+import { apiUrl } from "../../lib/apiBase";
 
 export default function TasksTab() {
   const { taskLists, tasks, addTaskList, addTask, toggleTask, deleteTask, updateTask } = useTasks();
@@ -55,7 +56,7 @@ export default function TasksTab() {
     setLoadingAI(true);
     setAiError(null);
     try {
-      const response = await fetch("/api/ai/tasks-suggestions", {
+      const response = await fetch(apiUrl("/api/ai/tasks-suggestions"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

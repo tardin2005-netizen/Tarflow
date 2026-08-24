@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, LineChart, Line } from "recharts";
 import { formatCurrency } from "../../lib/utils";
+import { apiUrl } from "../../lib/apiBase";
 import { B3_ASSET_DATABASE, searchB3Assets, B3AssetData } from "../../data/b3Database";
 
 // TypeScript Interfaces
@@ -67,7 +68,7 @@ export default function InvestimentosTab() {
 
   const fetchB3Analysis = async () => {
     try {
-      const res = await fetch("/api/b3/rankings/all");
+      const res = await fetch(apiUrl("/api/b3/rankings/all"));
       if (res.ok) {
         const data = await res.json();
         setB3Analysis(data);
@@ -90,7 +91,7 @@ export default function InvestimentosTab() {
     }, 1800);
 
     try {
-      const res = await fetch("/api/b3/analyze", { method: "POST" });
+      const res = await fetch(apiUrl("/api/b3/analyze"), { method: "POST" });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.details || errData.error || "Erro de rede no servidor");

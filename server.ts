@@ -11,7 +11,7 @@ import b3AnalysisRouter from "./src/routes/b3Analysis";
 import { withGeminiRetry } from "./src/lib/geminiRetry";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json());
 app.use("/api/b3", b3AnalysisRouter);
