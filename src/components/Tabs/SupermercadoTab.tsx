@@ -414,7 +414,7 @@ export default function SupermercadoTab() {
       </div>
 
       {/* Select Month and Tab Nav Grid */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[var(--card-bg)] border border-[var(--border-color)] p-4 rounded-2xl shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[var(--card-bg)] border border-[var(--border-color)] p-4 rounded-2xl shadow-sm min-w-0 max-w-full overflow-hidden">
         <div className="flex items-center gap-2 min-w-0">
           <CalendarIcon size={14} className="text-blue-500 shrink-0" />
           <span className="text-xs font-black uppercase text-[var(--text-muted)] shrink-0">Período:</span>
@@ -430,10 +430,10 @@ export default function SupermercadoTab() {
         </div>
 
         {/* Tab Controls */}
-        <div className="flex bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl p-1 gap-1 w-full sm:w-auto overflow-x-auto">
+        <div className="flex bg-[var(--container-bg)] border border-[var(--border-color)] rounded-xl p-1 gap-1 w-full sm:w-auto min-w-0 max-w-full overflow-x-auto">
           <button
             onClick={() => setActiveSubTab("compras")}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-4 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+            className={`shrink-0 flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-3 sm:px-4 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "compras" ? "bg-blue-600 text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
@@ -442,7 +442,7 @@ export default function SupermercadoTab() {
           </button>
           <button
             onClick={() => setActiveSubTab("comparador")}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-4 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+            className={`shrink-0 flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-3 sm:px-4 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "comparador" ? "bg-blue-600 text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
@@ -451,7 +451,7 @@ export default function SupermercadoTab() {
           </button>
           <button
             onClick={() => setActiveSubTab("relatorios")}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-4 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+            className={`shrink-0 flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase px-3 sm:px-4 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "relatorios" ? "bg-blue-600 text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
