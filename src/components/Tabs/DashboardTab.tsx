@@ -364,7 +364,7 @@ export default function DashboardTab() {
                       dataKey="value"
                       nameKey="name"
                       cx="50%" cy="50%"
-                      innerRadius="80%" outerRadius="90%"
+                      innerRadius="75%" outerRadius="90%"
                       paddingAngle={3}
                       stroke="none"
                     >
