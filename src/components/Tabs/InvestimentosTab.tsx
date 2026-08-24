@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  TrendingUp, Layers, Wallet, Calendar, Award, Trash2, X, Sparkles, ChevronDown, ChevronRight, Info, Trophy, Play, Plus, BarChart2, Briefcase, Settings, PieChart as PieChartIcon
+  TrendingUp, Layers, Wallet, Calendar, Award, Trash2, X, Sparkles, ChevronDown, ChevronRight, Info, Trophy, Play, Plus, BarChart2, Briefcase, Settings, PieChart as PieChartIcon, Calculator
 } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, LineChart, Line } from "recharts";
 import { formatCurrency } from "../../lib/utils";
@@ -53,7 +53,7 @@ const ALLOCATION_COLORS: Record<string, string> = {
 };
 
 export default function InvestimentosTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"carteira" | "lancamentos" | "analise" | "metas" | "resumo" | "patrimonio" | "proventos" | "rentabilidade">("carteira");
+  const [activeSubTab, setActiveSubTab] = useState<"carteira" | "lancamentos" | "analise" | "metas" | "resumo" | "patrimonio" | "proventos" | "rentabilidade" | "simulador">("carteira");
   const [carteiraSubTab, setCarteiraSubTab] = useState<"visao_geral" | "ativos" | "proventos" | "rentabilidade">("visao_geral");
   const [b3Analysis, setB3Analysis] = useState<{
     updatedAt: string;
@@ -476,12 +476,13 @@ export default function InvestimentosTab() {
         </div>
 
         {/* Streamlined Main Subtabs Navigation Bar (Botões Pequenos) */}
-        <div id="investments-tab-nav" className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full mb-6 bg-[var(--card-bg)]/40 p-2 rounded-2xl border border-[var(--border-color)]">
+        <div id="investments-tab-nav" className="grid grid-cols-2 sm:grid-cols-5 gap-2 w-full mb-6 bg-[var(--card-bg)]/40 p-2 rounded-2xl border border-[var(--border-color)]">
           {[
             { id: "carteira", label: `Minha Carteira (${calculatedAssets.length})`, icon: <Briefcase size={14} className="text-emerald-500" /> },
             { id: "lancamentos", label: "Histórico de Custódia", icon: <Layers size={14} className="text-indigo-500" /> },
             { id: "analise", label: "Análise IA B3", icon: <Sparkles size={14} className="text-amber-500" /> },
-            { id: "metas", label: "Metas de Investimento", icon: <Trophy size={14} className="text-purple-500" /> }
+            { id: "metas", label: "Metas de Investimento", icon: <Trophy size={14} className="text-purple-500" /> },
+            { id: "simulador", label: "Simulador de Juros", icon: <Calculator size={14} className="text-cyan-500" /> }
           ].map((tab) => {
             const isSelected = 
               activeSubTab === tab.id || 
@@ -581,7 +582,7 @@ export default function InvestimentosTab() {
         )}
 
         {/* --- PORTFOLIO EMPTY STATE (Only for portfolio sub-tabs if no transactions) --- */}
-        {activeSubTab !== "analise" && transactions.length === 0 ? (
+        {activeSubTab !== "analise" && activeSubTab !== "simulador" && transactions.length === 0 ? (
           <div className="py-16 px-4 flex flex-col items-center text-center justify-center bg-[var(--card-bg)]/20 border border-dashed border-[var(--border-color)] rounded-3xl max-w-lg mx-auto my-6 p-6">
             <div className="w-16 h-16 bg-blue-500/10 text-blue-500 flex items-center justify-center rounded-2xl border border-blue-500/20 mb-5">
               <Wallet size={28} />
@@ -1507,6 +1508,9 @@ export default function InvestimentosTab() {
               </div>
             )}
 
+            {/* SIMULADOR DE JUROS COMPOSTOS */}
+            {activeSubTab === "simulador" && <CompoundInterestSimulator />}
+
             {/* 6. HISTÓRICO DE LANÇAMENTOS */}
             {activeSubTab === "lancamentos" && (
               <div className="space-y-4">
@@ -2020,7 +2024,138 @@ export default function InvestimentosTab() {
           </>
         )}
       </AnimatePresence>
-      
+
+    </div>
+  );
+}
+
+function CompoundInterestSimulator() {
+  const [aporteInicial, setAporteInicial] = useState(500);
+  const [aporteMensal, setAporteMensal] = useState(300);
+  const [taxaAnual, setTaxaAnual] = useState(10);
+  const [anos, setAnos] = useState(4);
+
+  const { totalInvestido, jurosRendidos, montanteAcumulado, chartData } = useMemo(() => {
+    const monthlyRate = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
+    const totalMonths = anos * 12;
+
+    let balance = aporteInicial;
+    let contributed = aporteInicial;
+    const points: { label: string; Total: number; Aporte: number }[] = [
+      { label: "Início", Total: balance, Aporte: contributed }
+    ];
+
+    for (let month = 1; month <= totalMonths; month++) {
+      balance = balance * (1 + monthlyRate) + aporteMensal;
+      contributed += aporteMensal;
+      if (month % 12 === 0) {
+        points.push({ label: `${month / 12} ${month / 12 === 1 ? "Ano" : "Anos"}`, Total: balance, Aporte: contributed });
+      }
+    }
+
+    return {
+      totalInvestido: contributed,
+      jurosRendidos: balance - contributed,
+      montanteAcumulado: balance,
+      chartData: points
+    };
+  }, [aporteInicial, aporteMensal, taxaAnual, anos]);
+
+  const retornoPercent = totalInvestido > 0 ? (jurosRendidos / totalInvestido) * 100 : 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl">
+          <span className="text-[9px] uppercase font-black tracking-widest text-[var(--text-muted)]">Total Investido</span>
+          <div className="text-xl font-black font-mono text-[var(--text-primary)] mt-1">{formatCurrency(totalInvestido)}</div>
+          <span className="text-[10px] text-[var(--text-muted)] mt-1 block">Do seu próprio bolso</span>
+        </div>
+        <div className="p-4 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl">
+          <span className="text-[9px] uppercase font-black tracking-widest text-[var(--text-muted)]">Juros Rendidos</span>
+          <div className="text-xl font-black font-mono text-emerald-500 mt-1">+{formatCurrency(jurosRendidos)}</div>
+          <span className="text-[10px] text-emerald-500 mt-1 block">+{retornoPercent.toFixed(0)}% de retorno</span>
+        </div>
+        <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl text-white">
+          <span className="text-[9px] uppercase font-black tracking-widest text-white/70">Montante Acumulado</span>
+          <div className="text-xl font-black font-mono mt-1">{formatCurrency(montanteAcumulado)}</div>
+          <span className="text-[10px] text-white/70 mt-1 block">Patrimônio projetado</span>
+        </div>
+      </div>
+
+      <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-black text-[var(--text-primary)]">Projeção de Crescimento Patrimonial</h3>
+            <p className="text-[10px] text-[var(--text-muted)]">Linha Azul: Juros Compostos · Linha Cinza: Aportes Brutos</p>
+          </div>
+        </div>
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ left: -20 }}>
+              <defs>
+                <linearGradient id="simTotalGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="label" tick={{ fontSize: 10 }} stroke="var(--text-muted)" />
+              <YAxis tick={{ fontSize: 10 }} stroke="var(--text-muted)" tickFormatter={(v) => formatCurrency(v)} width={0} />
+              <Tooltip formatter={(v: number) => formatCurrency(v)} />
+              <Area type="monotone" dataKey="Aporte" stroke="#9ca3af" fill="transparent" strokeWidth={1.5} name="Aporte Bruto" />
+              <Area type="monotone" dataKey="Total" stroke="#3b82f6" fill="url(#simTotalGradient)" strokeWidth={2.5} name="Total Acumulado" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <p className="text-[10px] text-[var(--text-muted)] mt-2">Calculadora com base em juros reais capitalizados mensalmente.</p>
+      </div>
+
+      <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-5 space-y-5">
+        <h3 className="text-sm font-black text-[var(--text-primary)] flex items-center gap-2">
+          <Calculator size={16} className="text-cyan-500" /> Ajuste Suas Metas
+        </h3>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-xs">
+            <span className="font-bold text-[var(--text-muted)] uppercase tracking-wider text-[10px]">Aporte Inicial</span>
+            <span className="font-black font-mono text-[var(--text-primary)]">{formatCurrency(aporteInicial)}</span>
+          </div>
+          <input type="range" min={0} max={50000} step={100} value={aporteInicial} onChange={(e) => setAporteInicial(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
+          <div className="flex justify-between text-[9px] text-[var(--text-muted)]"><span>R$ 0</span><span>R$ 50 mil</span></div>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-xs">
+            <span className="font-bold text-[var(--text-muted)] uppercase tracking-wider text-[10px]">Aporte Mensal</span>
+            <span className="font-black font-mono text-[var(--text-primary)]">{formatCurrency(aporteMensal)}</span>
+          </div>
+          <input type="range" min={50} max={5000} step={50} value={aporteMensal} onChange={(e) => setAporteMensal(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
+          <div className="flex justify-between text-[9px] text-[var(--text-muted)]"><span>R$ 50</span><span>R$ 5 mil</span></div>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-xs">
+            <span className="font-bold text-[var(--text-muted)] uppercase tracking-wider text-[10px]">Taxa Anual (Retorno Estimado)</span>
+            <span className="font-black font-mono text-[var(--text-primary)]">{taxaAnual}% a.a.</span>
+          </div>
+          <input type="range" min={4} max={18} step={0.5} value={taxaAnual} onChange={(e) => setTaxaAnual(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
+          <div className="flex justify-between text-[9px] text-[var(--text-muted)]"><span>4% (Conservador)</span><span>18% (Agressivo)</span></div>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-xs">
+            <span className="font-bold text-[var(--text-muted)] uppercase tracking-wider text-[10px]">Período de Investimento</span>
+            <span className="font-black font-mono text-[var(--text-primary)]">{anos} {anos === 1 ? "ano" : "anos"}</span>
+          </div>
+          <input type="range" min={1} max={35} step={1} value={anos} onChange={(e) => setAnos(Number(e.target.value))} className="w-full accent-blue-600 cursor-pointer" />
+          <div className="flex justify-between text-[9px] text-[var(--text-muted)]"><span>1 ano</span><span>35 anos</span></div>
+        </div>
+
+        <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg text-[10px] text-[var(--text-muted)] leading-relaxed flex items-start gap-2">
+          <Info size={13} className="text-blue-500 shrink-0 mt-0.5" />
+          <span>Aporte pequeno, constância inabalável e tempo: os três pilares que transformam simples poupadores em investidores consolidados.</span>
+        </div>
+      </div>
     </div>
   );
 }
