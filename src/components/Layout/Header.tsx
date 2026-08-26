@@ -99,7 +99,10 @@ export default function Header({ onToggleSidebar, user, onLoginSuccess, sidebarP
   };
 
   return (
-    <header className="bg-gradient-to-br from-[#2C5F7C] to-[#1a1a2e] text-white py-4 px-3 sm:py-5 sm:px-6 md:px-8 shrink-0 relative overflow-hidden flex items-center justify-between shadow-xl border-b border-white/10">
+    <header
+      className="bg-gradient-to-br from-[#2C5F7C] to-[#1a1a2e] text-white py-4 px-3 sm:py-5 sm:px-6 md:px-8 shrink-0 relative overflow-hidden flex items-center justify-between shadow-xl border-b border-white/10"
+      style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
+    >
       {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl animate-pulse" />
