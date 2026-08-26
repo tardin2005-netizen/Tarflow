@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { CATEGORIES, CATEGORY_COLORS_MAP } from "../../constants/categories";
-import { useExpenses, useGoals, useSupermarketProducts } from "../../hooks/useFirebaseData";
+import { useExpenses, useGoals } from "../../hooks/useFirebaseData";
 import { cn, formatCurrency } from "../../lib/utils";
 import { ExpenseItem } from "../ExpenseItem";
 import { motion, AnimatePresence } from "motion/react";
-import { TrendingUp, Wallet, ArrowUpRight, Filter, X, PieChart as PieIcon, Calendar, History, CheckCircle, AlertCircle, Clock, ChevronDown, ShoppingCart } from "lucide-react";
+import { TrendingUp, Wallet, ArrowUpRight, Filter, X, PieChart as PieIcon, Calendar, History, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useTranslation } from "react-i18next";
 
@@ -22,9 +22,7 @@ const FILTER_LABELS: Record<FilterType, string> = {
 export default function DashboardTab() {
   const { expenses, deleteExpense, updateExpense } = useExpenses();
   const { goals } = useGoals();
-  const { products: supermarketProducts } = useSupermarketProducts();
   const { t } = useTranslation();
-  const [expandedHistoryMonth, setExpandedHistoryMonth] = useState<string | null>(null);
 
   // Reset to default on every page load/update as requested by user
   const [filter, setFilter] = useState<FilterType>("all");
@@ -148,20 +146,7 @@ export default function DashboardTab() {
     return null;
   };
 
-  const recentExpenses = [...filteredExpenses].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
-
-  // Drill-down detail for a selected month in "Histórico Mensal de Gastos" (item 11)
-  const historyMonthDetail = useMemo(() => {
-    if (!expandedHistoryMonth) return null;
-    const monthExpenses = expenses
-      .filter(e => e.date && e.date.startsWith(expandedHistoryMonth))
-      .sort((a, b) => b.date.localeCompare(a.date));
-    const monthSupermarketProducts = supermarketProducts
-      .filter(p => p.month === expandedHistoryMonth)
-      .sort((a, b) => b.date.localeCompare(a.date));
-    const supermarketTotal = monthSupermarketProducts.reduce((sum, p) => sum + (p.price * p.qty), 0);
-    return { monthExpenses, monthSupermarketProducts, supermarketTotal };
-  }, [expandedHistoryMonth, expenses, supermarketProducts]);
+  const recentExpenses = [...filteredExpenses].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
 
   return (
     <div className="tab-content flex flex-col gap-4 sm:gap-6 w-full overflow-x-hidden">
@@ -173,7 +158,13 @@ export default function DashboardTab() {
       </div>
 
       {/* Mini Dashboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 w-full">
+      <motion.div
+        key={`mini-${filter}-${customStart}-${customEnd}`}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 w-full"
+      >
         {/* Gasto no Período */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -181,7 +172,7 @@ export default function DashboardTab() {
           className="lg:col-span-3 bg-gradient-to-br from-[#2C5F7C] to-[#1a1a2e] p-5 sm:p-6 rounded-3xl text-white shadow-xl relative overflow-hidden"
         >
           <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-40 transition-opacity">
-            <img src="/tarflowicon.png" alt="Tarflow Icon" className="w-8 h-8 drop-shadow-lg" />
+            <img src={`${import.meta.env.BASE_URL}tarflowicon.png`} alt="Tarflow Icon" className="w-8 h-8 drop-shadow-lg" />
           </div>
           <div className="relative z-10">
             <div className="flex justify-between items-start mb-2">
@@ -237,7 +228,7 @@ export default function DashboardTab() {
             </div>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
 
       <div className="grid lg:grid-cols-5 gap-4 sm:gap-6 w-full min-w-0">
         {/* Main Left Section: Distribuição */}
@@ -353,18 +344,24 @@ export default function DashboardTab() {
               </AnimatePresence>
             </div>
             
-            <div className="flex flex-col items-center gap-6 w-full min-w-0 mt-4">
+            <motion.div
+              key={`dist-${filter}-${customStart}-${customEnd}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="flex flex-col items-center gap-6 w-full min-w-0 mt-4"
+            >
               
               {/* Top: Pie Chart */}
-              <div className="w-[240px] xs:w-[280px] sm:w-[320px] md:w-[380px] h-[240px] xs:h-[280px] sm:h-[320px] md:h-[380px] relative shrink-0">
+              <div className="w-[280px] sm:w-[320px] md:w-[380px] h-[280px] sm:h-[320px] md:h-[380px] relative shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie 
-                      data={stats.chartData} 
-                      dataKey="value" 
-                      nameKey="name" 
-                      cx="50%" cy="50%" 
-                      innerRadius="75%" outerRadius="90%" 
+                    <Pie
+                      data={stats.chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%" cy="50%"
+                      innerRadius="75%" outerRadius="90%"
                       paddingAngle={3}
                       stroke="none"
                     >
@@ -380,7 +377,7 @@ export default function DashboardTab() {
                 {/* Central Text */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none drop-shadow-md px-2">
                   <span className="text-xs font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Total ({FILTER_LABELS[filter]})</span>
-                  <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[var(--text-primary)] leading-none tracking-tight break-words max-w-[85%] text-center">
+                  <span className="text-3xl sm:text-4xl font-black text-[var(--text-primary)] leading-none tracking-tight break-words max-w-[85%] text-center">
                     {formatCurrency(dashboardData.totalMonth)}
                   </span>
                 </div>
@@ -431,7 +428,7 @@ export default function DashboardTab() {
                   <p className="text-sm font-bold mt-1 text-[#667eea]">{stats.itemsCount} {stats.itemsCount === 1 ? 'item analisado' : 'itens analisados'}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
         </div>
@@ -489,7 +486,7 @@ export default function DashboardTab() {
             </div>
 
             <p className="text-xs text-[var(--text-muted)] mb-4">
-              Acompanhe quanto você gastou a cada mês e confira se ficou dentro do limite geral estipulado.
+              Acompanhe quanto você gastou a cada mês. Para ver os lançamentos de um mês específico, acesse <span className="font-bold text-[var(--text-primary)]">Gestão de Gastos → Extratos</span>.
             </p>
 
             <div className="space-y-3">
@@ -499,113 +496,58 @@ export default function DashboardTab() {
                 </div>
               ) : (
                 monthlyHistory.map((m) => {
-                  const isOpen = expandedHistoryMonth === m.monthKey;
                   return (
                     <div
                       key={m.monthKey}
-                      className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] hover:border-blue-500/40 transition-all min-w-0 overflow-hidden"
+                      className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] min-w-0 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                     >
-                      <button
-                        type="button"
-                        onClick={() => setExpandedHistoryMonth(isOpen ? null : m.monthKey)}
-                        className="w-full p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0 cursor-pointer text-left"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-black text-xs shrink-0">
-                            <Calendar size={18} />
-                          </div>
-                          <div className="min-w-0">
-                            <h4 className="text-sm font-black text-[var(--text-primary)] truncate">{m.label}</h4>
-                            <span className="text-[11px] text-[var(--text-muted)] font-medium">
-                              {m.count} {m.count === 1 ? 'transação' : 'transações'}
-                            </span>
-                          </div>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-black text-xs shrink-0">
+                          <Calendar size={18} />
                         </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-black text-[var(--text-primary)] truncate">{m.label}</h4>
+                          <span className="text-[11px] text-[var(--text-muted)] font-medium">
+                            {m.count} {m.count === 1 ? 'transação' : 'transações'}
+                          </span>
+                        </div>
+                      </div>
 
-                        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                          <div className="text-left sm:text-right">
-                            <div className="text-sm font-black text-[var(--text-primary)]">
-                              {formatCurrency(m.total)}
-                            </div>
-                            {m.limit > 0 && (
-                              <div className="text-[10px] text-[var(--text-muted)] font-bold">
-                                Teto: {formatCurrency(m.limit)}
-                              </div>
-                            )}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                        <div className="text-left sm:text-right">
+                          <div className="text-sm font-black text-[var(--text-primary)]">
+                            {formatCurrency(m.total)}
                           </div>
-
                           {m.limit > 0 && (
-                            <div className="shrink-0">
-                              <span className={cn(
-                                "px-2.5 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1",
-                                m.isOver
-                                  ? "bg-red-500/10 text-red-500 border border-red-500/20"
-                                  : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                              )}>
-                                {m.isOver ? (
-                                  <>
-                                    <AlertCircle size={10} />
-                                    <span>{Math.round(m.percent)}% (Acima)</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle size={10} />
-                                    <span>{Math.round(m.percent)}% (No limite)</span>
-                                  </>
-                                )}
-                              </span>
+                            <div className="text-[10px] text-[var(--text-muted)] font-bold">
+                              Teto: {formatCurrency(m.limit)}
                             </div>
                           )}
-
-                          <ChevronDown size={16} className={cn("text-[var(--text-muted)] shrink-0 transition-transform", isOpen && "rotate-180")} />
                         </div>
-                      </button>
 
-                      <AnimatePresence>
-                        {isOpen && historyMonthDetail && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden border-t border-[var(--border-color)]"
-                          >
-                            <div className="p-4 space-y-4">
-                              {/* Supermarket summary for this month */}
-                              {historyMonthDetail.monthSupermarketProducts.length > 0 && (
-                                <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/15 flex items-center justify-between gap-2">
-                                  <span className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-primary)] min-w-0">
-                                    <ShoppingCart size={13} className="text-blue-500 shrink-0" />
-                                    <span className="truncate">Supermercado: {historyMonthDetail.monthSupermarketProducts.length} itens</span>
-                                  </span>
-                                  <span className="text-xs font-black font-mono text-blue-500 shrink-0">
-                                    {formatCurrency(historyMonthDetail.supermarketTotal)}
-                                  </span>
-                                </div>
+                        {m.limit > 0 && (
+                          <div className="shrink-0">
+                            <span className={cn(
+                              "px-2.5 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1",
+                              m.isOver
+                                ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                                : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                            )}>
+                              {m.isOver ? (
+                                <>
+                                  <AlertCircle size={10} />
+                                  <span>{Math.round(m.percent)}% (Acima)</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle size={10} />
+                                  <span>{Math.round(m.percent)}% (No limite)</span>
+                                </>
                               )}
-
-                              {/* Full expense list for this month */}
-                              <div className="space-y-2">
-                                {historyMonthDetail.monthExpenses.length === 0 ? (
-                                  <p className="text-xs text-[var(--text-muted)] italic text-center py-2">
-                                    Nenhum lançamento detalhado neste mês.
-                                  </p>
-                                ) : (
-                                  historyMonthDetail.monthExpenses.map((exp) => (
-                                    <ExpenseItem
-                                      key={exp.id}
-                                      expense={exp}
-                                      updateExpense={updateExpense}
-                                      deleteExpense={deleteExpense}
-                                      allowDelete={false}
-                                      delay={0}
-                                    />
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </motion.div>
+                            </span>
+                          </div>
                         )}
-                      </AnimatePresence>
+                      </div>
                     </div>
                   );
                 })

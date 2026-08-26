@@ -26,9 +26,6 @@ export default function App() {
     return (localStorage.getItem("tarflow-sidebar-pos") as "left" | "right") || "left";
   });
   const [user, loading] = useAuthState(auth);
-  const [isGuest, setIsGuest] = useState<boolean>(() => {
-    return localStorage.getItem("tarflow-guest-mode") === "true";
-  });
   const { t } = useTranslation();
 
   const toggleSidebarPosition = () => {
@@ -37,26 +34,20 @@ export default function App() {
     localStorage.setItem("tarflow-sidebar-pos", newPos);
   };
 
-  const handleEnterGuest = () => {
-    setIsGuest(true);
-    localStorage.setItem("tarflow-guest-mode", "true");
-    setActiveTab("inicio");
-  };
-
-  // Redirect to welcome if not logged in and not guest
+  // Redirect to welcome if not logged in
   useEffect(() => {
-    if (!loading && !user && !isGuest && activeTab !== "sobre" && activeTab !== "contato") {
+    if (!loading && !user && activeTab !== "sobre" && activeTab !== "contato") {
       setActiveTab("welcome");
-    } else if (!loading && (user || isGuest) && activeTab === "welcome") {
+    } else if (!loading && user && activeTab === "welcome") {
       setActiveTab("inicio");
     }
-  }, [user, loading, isGuest, activeTab]);
+  }, [user, loading, activeTab]);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const renderTab = () => {
     switch (activeTab) {
-      case "welcome": return <WelcomeTab onEnterGuest={handleEnterGuest} />;
+      case "welcome": return <WelcomeTab />;
       case "inicio": return <DashboardTab />;
       case "gastos": return <GestaoGastosTab />;
       case "supermercado": return <GestaoGastosTab initialSubTab="supermercado" />;
@@ -68,7 +59,7 @@ export default function App() {
       case "perfil": return <ProfileTab />;
       case "sobre": return <AboutTab />;
       case "contato": return <ContactTab />;
-      default: return (user || isGuest) ? <DashboardTab /> : <WelcomeTab onEnterGuest={handleEnterGuest} />;
+      default: return user ? <DashboardTab /> : <WelcomeTab />;
     }
   };
 

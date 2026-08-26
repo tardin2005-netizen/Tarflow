@@ -3,6 +3,7 @@ import { useExpenses, useGoals, useTasks, useUserProfile } from "../../hooks/use
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, TrendingUp, CheckSquare, RefreshCw, AlertTriangle, ArrowDown, ChevronRight } from "lucide-react";
 import { formatCurrency } from "../../lib/utils";
+import { apiUrl } from "../../lib/apiBase";
 
 interface SavingTip {
   title: string;
@@ -47,7 +48,7 @@ export default function AIDashboardInsights() {
     setError(null);
 
     try {
-      const response = await fetch("/api/ai/dashboard-insights", {
+      const response = await fetch(apiUrl("/api/ai/dashboard-insights"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -5,11 +5,7 @@ import { useTranslation } from "react-i18next";
 import { auth, googleProvider } from "../../lib/firebase";
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
-interface WelcomeTabProps {
-  onEnterGuest?: () => void;
-}
-
-export default function WelcomeTab({ onEnterGuest }: WelcomeTabProps) {
+export default function WelcomeTab() {
   const { t } = useTranslation();
   
   const [isEmailMode, setIsEmailMode] = useState(false);
@@ -30,11 +26,11 @@ export default function WelcomeTab({ onEnterGuest }: WelcomeTabProps) {
         return;
       }
       if (error.code === 'auth/popup-blocked') {
-        setErrorMsg("O navegador bloqueou a janela de login do Google. Permita pop-ups ou use o login com Email ou Convidado.");
+        setErrorMsg("O navegador bloqueou a janela de login do Google. Permita pop-ups ou use o login com Email.");
       } else if (error.code === 'auth/unauthorized-domain') {
-        setErrorMsg("Domínio de hospedagem não cadastrado no Firebase Auth. Você pode usar o modo Convidado ou Email.");
+        setErrorMsg("Domínio de hospedagem não cadastrado no Firebase Auth. Você pode usar o login com Email.");
       } else {
-        setErrorMsg(`Não foi possível conectar com Google (${error.code || 'erro'}). Tente com Email ou como Convidado.`);
+        setErrorMsg(`Não foi possível conectar com Google (${error.code || 'erro'}). Tente com Email.`);
       }
     }
   };
@@ -81,7 +77,7 @@ export default function WelcomeTab({ onEnterGuest }: WelcomeTabProps) {
         {/* Logo */}
         <div className="w-full max-w-[16rem] md:max-w-xs flex justify-center items-center shrink-0 pointer-events-none mb-0">
           <img 
-            src="/tarflowicon.png" 
+            src={`${import.meta.env.BASE_URL}tarflowicon.png`}
             alt="Tarflow" 
             className="w-full h-auto object-contain drop-shadow-[0_0_30px_rgba(45,115,255,0.3)] transition-all duration-300 scale-[1.1] md:scale-[1.2] pointer-events-auto hover:drop-shadow-[0_20px_40px_rgba(45,115,255,0.5)]"
           />
@@ -130,17 +126,6 @@ export default function WelcomeTab({ onEnterGuest }: WelcomeTabProps) {
                   <Mail size={18} className="shrink-0" />
                   <span>{t("Continuar com Email")}</span>
                 </motion.button>
-
-                {onEnterGuest && (
-                  <motion.button 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={onEnterGuest}
-                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold text-xs md:text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] bg-[var(--section-bg)] hover:bg-zinc-500/10 border border-[var(--border-color)] w-full transition-all cursor-pointer"
-                  >
-                    <span>{t("Explorar como Visitante (Sem login)")}</span>
-                  </motion.button>
-                )}
               </motion.div>
             ) : (
               <motion.form 

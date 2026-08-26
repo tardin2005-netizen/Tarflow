@@ -14,7 +14,7 @@ export const CATEGORIES: Category[] = [
   { id: 'Beleza', icon: '💄', label: 'Beleza' },
   { id: 'Pets', icon: '🐶', label: 'Pets' },
   { id: 'Casa', icon: '🏠', label: 'Casa' },
-  { id: 'Contas Fixas', icon: '📄', label: 'Fixas' },
+  { id: 'Contas Fixas', icon: '📄', label: 'Despesas Fixas' },
   { id: 'Assinaturas', icon: '📺', label: 'Assinaturas' },
   { id: 'Investimentos', icon: '📈', label: 'Investimentos' },
   { id: 'Presentes', icon: '🎁', label: 'Presentes' },
@@ -23,25 +23,29 @@ export const CATEGORIES: Category[] = [
   { id: 'Outros', icon: '📦', label: 'Outros' }
 ];
 
+// Each category gets its own distinct color, chosen to evoke what it represents
+// (food = warm orange/appetite, health = clinical teal, travel = sky blue, etc.)
+// rather than reusing a handful of hues — previously several unrelated categories
+// shared the exact same color and were indistinguishable in the pie chart.
 export const CATEGORY_COLORS_MAP: Record<string, string> = {
-  'Alimentos': '#F97316', // Laranja
-  'Mercado': '#10B981', // Verde
-  'Consumo Digital': '#3B82F6', // Azul claro
-  'Transporte': '#9CA3AF', // Cinza
-  'Combustível': '#1E3A8A', // Azul marinho
-  'Educação': '#3B82F6', // Azul claro
-  'Saúde': '#10B981', // Verde
-  'Lazer': '#8B5CF6', // Roxo
-  'Viagem': '#1E3A8A', // Azul marinho
-  'Vestuário': '#9CA3AF', // Cinza
-  'Beleza': '#F97316', // Laranja
-  'Pets': '#10B981', // Verde
-  'Casa': '#3B82F6', // Azul claro
-  'Contas Fixas': '#1E3A8A', // Azul marinho
-  'Assinaturas': '#3B82F6', // Azul claro
-  'Investimentos': '#10B981', // Verde
-  'Presentes': '#F97316', // Laranja
-  'Doações': '#9CA3AF', // Cinza
-  'Impostos': '#1E3A8A', // Azul marinho
-  'Outros': '#9CA3AF' // Cinza
+  'Alimentos': '#FB923C', // Laranja vibrante — comida, apetite
+  'Mercado': '#4ADE80', // Verde fresco — hortifrúti/compras
+  'Consumo Digital': '#38BDF8', // Azul ciano — tecnologia
+  'Transporte': '#FACC15', // Amarelo — táxi/atenção no trânsito
+  'Combustível': '#EF4444', // Vermelho — posto de gasolina/alerta
+  'Educação': '#6366F1', // Índigo — acadêmico
+  'Saúde': '#2563EB', // Azul royal — clínico, distinto do verde de Mercado/Investimentos
+  'Lazer': '#C084FC', // Roxo claro — diversão
+  'Viagem': '#0EA5E9', // Azul-céu — viagem
+  'Vestuário': '#F472B6', // Rosa — moda
+  'Beleza': '#E879F9', // Magenta — cosméticos
+  'Pets': '#D97706', // Âmbar — terroso, animal
+  'Casa': '#A16207', // Marrom — lar, madeira
+  'Contas Fixas': '#64748B', // Cinza-azulado — sério, estável
+  'Assinaturas': '#8B5CF6', // Violeta — streaming
+  'Investimentos': '#10B981', // Verde-esmeralda — crescimento financeiro
+  'Presentes': '#FB7185', // Rosa-vermelho — festivo
+  'Doações': '#F43F5E', // Vermelho-rosa — coração, caridade
+  'Impostos': '#78716C', // Cinza-pedra — burocrático
+  'Outros': '#9CA3AF' // Cinza neutro — categoria genérica
 };
