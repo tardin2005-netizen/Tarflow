@@ -90,7 +90,10 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sideb
         )}
       >
         {/* Profile Header */}
-        <div className="p-6 sm:p-7 border-b border-white/5 relative bg-white/5 group shrink-0">
+        <div
+          className="p-6 sm:p-7 border-b border-white/5 relative bg-white/5 group shrink-0"
+          style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top))" }}
+        >
           <div className="flex items-center gap-3.5 mb-6">
             <div className="w-10 h-10 flex justify-center items-center shrink-0 overflow-visible pointer-events-none">
               <img src={`${import.meta.env.BASE_URL}tarflowicon.png`} alt="Tarflow Icon" className="w-full h-auto object-contain drop-shadow-2xl scale-[1.5] pointer-events-auto" />
@@ -122,9 +125,10 @@ export default function Sidebar({ isOpen, onClose, activeTab, onTabChange, sideb
           </div>
 
           {/* Close button on mobile */}
-          <button 
+          <button
             onClick={onClose}
-            className="md:hidden absolute top-4 right-4 p-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            className="md:hidden absolute right-4 p-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            style={{ top: "max(1rem, env(safe-area-inset-top))" }}
           >
             <X size={18} />
           </button>

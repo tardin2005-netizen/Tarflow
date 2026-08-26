@@ -30,9 +30,9 @@ export const CATEGORIES: Category[] = [
 export const CATEGORY_COLORS_MAP: Record<string, string> = {
   'Alimentos': '#FB923C', // Laranja vibrante — comida, apetite
   'Mercado': '#4ADE80', // Verde fresco — hortifrúti/compras
-  'Consumo Digital': '#38BDF8', // Azul ciano — tecnologia
+  'Consumo Digital': '#10B981', // Verde claro — mesma cor antes usada em Investimentos
   'Transporte': '#FACC15', // Amarelo — táxi/atenção no trânsito
-  'Combustível': '#EF4444', // Vermelho — posto de gasolina/alerta
+  'Combustível': '#78350F', // Marrom — posto de gasolina/estrada
   'Educação': '#6366F1', // Índigo — acadêmico
   'Saúde': '#2563EB', // Azul royal — clínico, distinto do verde de Mercado/Investimentos
   'Lazer': '#C084FC', // Roxo claro — diversão
@@ -43,7 +43,7 @@ export const CATEGORY_COLORS_MAP: Record<string, string> = {
   'Casa': '#A16207', // Marrom — lar, madeira
   'Contas Fixas': '#64748B', // Cinza-azulado — sério, estável
   'Assinaturas': '#8B5CF6', // Violeta — streaming
-  'Investimentos': '#10B981', // Verde-esmeralda — crescimento financeiro
+  'Investimentos': '#008000', // Verde escuro — crescimento financeiro
   'Presentes': '#FB7185', // Rosa-vermelho — festivo
   'Doações': '#F43F5E', // Vermelho-rosa — coração, caridade
   'Impostos': '#78716C', // Cinza-pedra — burocrático
