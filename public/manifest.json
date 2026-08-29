@@ -9,7 +9,7 @@
   "icons": [
     {
       "src": "tarflowicon.png",
-      "sizes": "1004x1004",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
