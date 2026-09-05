@@ -688,11 +688,11 @@ export default function InvestimentosTab() {
                   <PieChartIcon size={16} className="text-blue-500" /> Distribuição por Classe
                 </h3>
                 <p className="text-[11px] text-[var(--text-muted)] mb-4">% do patrimônio total ({formatCurrency(totalPatrimony)})</p>
-                <div className="flex items-center gap-6 flex-wrap">
-                  <div className="w-36 h-36 shrink-0">
+                <div className="flex flex-col items-center gap-5">
+                  <div className="w-48 h-48 sm:w-56 sm:h-56 relative shrink-0 mx-auto">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={allocationChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="65%" outerRadius="95%" paddingAngle={3} stroke="none">
+                        <Pie data={allocationChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="75%" outerRadius="90%" paddingAngle={3} stroke="none">
                           {allocationChartData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={ALLOCATION_COLORS[entry.name] || "#9ca3af"} />
                           ))}
@@ -700,13 +700,20 @@ export default function InvestimentosTab() {
                         <Tooltip content={<CustomTooltip />} />
                       </PieChart>
                     </ResponsiveContainer>
+                    {/* Central Text */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none drop-shadow-md px-2">
+                      <span className="text-[10px] font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">Total Investido</span>
+                      <span className="text-xl sm:text-2xl font-black text-[var(--text-primary)] leading-none tracking-tight break-words max-w-[85%] text-center">
+                        {formatCurrency(totalPatrimony)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2.5 text-xs min-w-[140px]">
+                  <div className="w-full flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs">
                     {allocationChartData.map(item => (
-                      <div key={item.name} className="flex items-center gap-2">
+                      <div key={item.name} className="flex items-center gap-1.5 min-w-0">
                         <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: ALLOCATION_COLORS[item.name] }} />
                         <span className="font-bold text-[var(--text-primary)]">{item.name}</span>
-                        <span className="text-[var(--text-muted)] ml-auto pl-2 whitespace-nowrap">{item.pct.toFixed(1)}% · {formatCurrency(item.value)}</span>
+                        <span className="text-[var(--text-muted)] whitespace-nowrap">{item.pct.toFixed(1)}% · {formatCurrency(item.value)}</span>
                       </div>
                     ))}
                   </div>
