@@ -50,48 +50,44 @@ const CATEGORY_LABELS: Record<string, string> = {
   "Outros": "Outros ativos"
 };
 
-// Posição inicial real (Investidor10 · carteira "JOAO VICTOR"), usada apenas na
-// primeira vez que o app roda neste navegador. Quantidades vêm direto do
-// snapshot do usuário; o preço médio foi calculado a partir da rentabilidade
-// exibida no snapshot (preço atual / (1 + rentab%)), já que o snapshot não
-// trazia o preço médio de compra diretamente.
-const SEED_DATE = "2025-09-01";
-const DEFAULT_PORTFOLIO_TRANSACTIONS: Transaction[] = [
-  { id: "seed_petr4", code: "PETR4", name: "Petrobras PN", qty: 45, price: 27.04, date: SEED_DATE, type: "compra", category: "Ações", sector: "Petróleo e Gás" },
-  { id: "seed_bbas3", code: "BBAS3", name: "Banco do Brasil ON", qty: 63, price: 22.70, date: SEED_DATE, type: "compra", category: "Ações", sector: "Bancos" },
-  { id: "seed_bbse3", code: "BBSE3", name: "BB Seguridade ON", qty: 24, price: 30.73, date: SEED_DATE, type: "compra", category: "Ações", sector: "Seguros" },
-  { id: "seed_cmig4", code: "CMIG4", name: "Cemig PN", qty: 24, price: 10.15, date: SEED_DATE, type: "compra", category: "Ações", sector: "Energia Elétrica" },
-  { id: "seed_klbn4", code: "KLBN4", name: "Klabin PN", qty: 59, price: 3.79, date: SEED_DATE, type: "compra", category: "Ações", sector: "Papel e Embalagens" },
-  { id: "seed_gare11", code: "GARE11", name: "Guardian Real Estate FII", qty: 123, price: 7.72, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Logística e Renda Urbana" },
-  { id: "seed_cpts11", code: "CPTS11", name: "Capitânia Securities FII", qty: 72, price: 6.26, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Papel e CRIs" },
-  { id: "seed_psec11", code: "PSEC11", name: "Pátria Special Situations FII", qty: 7, price: 54.12, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Crédito Imobiliário" },
-  { id: "seed_xpml11", code: "XPML11", name: "XP Malls FII", qty: 2, price: 92.80, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Shopping Centers" },
-  { id: "seed_mxrf11", code: "MXRF11", name: "Maxi Renda FII", qty: 12, price: 6.89, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Papel e Híbrido" },
-  { id: "seed_btc", code: "BTC", name: "Bitcoin", qty: 0.002838, price: 470105, date: SEED_DATE, type: "compra", category: "Criptomoedas", sector: "Criptoativo / Reserva Digital" },
-  { id: "seed_ivv", code: "IVV", name: "iShares Core S&P 500 ETF", qty: 1, price: 442.50, date: SEED_DATE, type: "compra", category: "ETFs", sector: "ETF Internacional (S&P 500)" },
-  { id: "seed_lci", code: "LCIINTER", name: "LCI Inter", qty: 1, price: 504.00, date: SEED_DATE, type: "compra", category: "Outros", sector: "Renda Fixa · 90% CDI" },
-];
-const SEED_FLAG_KEY = "tarflow_investimentos_seeded_v1";
+// Múltiplas carteiras nomeadas, cada uma com seus próprios lançamentos.
+interface PortfolioWallet {
+  id: string;
+  name: string;
+  transactions: Transaction[];
+}
+
+const WALLETS_KEY = "tarflow_wallets";
+const ACTIVE_WALLET_KEY = "tarflow_active_wallet_id";
+
+function loadInitialWallets(): PortfolioWallet[] {
+  const saved = localStorage.getItem(WALLETS_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {
+      // ignore malformed data
+    }
+  }
+  return [{ id: "wallet_" + Date.now(), name: "Carteira 1", transactions: [] }];
+}
 
 export default function InvestimentosTab() {
   const [activeSubTab, setActiveSubTab] = useState<"carteira" | "simulador">("carteira");
 
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem("tarflow_transactions");
-    let parsed: Transaction[] = [];
-    if (saved) {
-      try {
-        const p = JSON.parse(saved);
-        if (Array.isArray(p)) parsed = p;
-      } catch {
-        // ignore malformed data, treat as empty
-      }
-    }
-    if (parsed.length > 0) return parsed;
-    // Sem lançamentos ainda: se a carteira já foi semeada/limpa alguma vez, respeita o vazio.
-    // Caso contrário (primeira visita), parte da posição real conhecida em vez de uma tela em branco.
-    return localStorage.getItem(SEED_FLAG_KEY) ? [] : DEFAULT_PORTFOLIO_TRANSACTIONS;
+  const [wallets, setWallets] = useState<PortfolioWallet[]>(loadInitialWallets);
+  const [activeWalletId, setActiveWalletId] = useState<string>(() => {
+    const saved = localStorage.getItem(ACTIVE_WALLET_KEY);
+    if (saved && wallets.some(w => w.id === saved)) return saved;
+    return wallets[0]?.id || "";
   });
+  const [isNewWalletModalOpen, setIsNewWalletModalOpen] = useState(false);
+  const [newWalletName, setNewWalletName] = useState("");
+  const [walletPendingDelete, setWalletPendingDelete] = useState<PortfolioWallet | null>(null);
+
+  const activeWallet = wallets.find(w => w.id === activeWalletId) || wallets[0];
+  const transactions = activeWallet?.transactions || [];
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -112,9 +108,12 @@ export default function InvestimentosTab() {
 
   // Auto-Sync to State persistence
   useEffect(() => {
-    localStorage.setItem("tarflow_transactions", JSON.stringify(transactions));
-    localStorage.setItem(SEED_FLAG_KEY, "1");
-  }, [transactions]);
+    localStorage.setItem(WALLETS_KEY, JSON.stringify(wallets));
+  }, [wallets]);
+
+  useEffect(() => {
+    if (activeWalletId) localStorage.setItem(ACTIVE_WALLET_KEY, activeWalletId);
+  }, [activeWalletId]);
 
   // Autocomplete Listener using Complete B3 Asset Database
   useEffect(() => {
@@ -364,7 +363,7 @@ export default function InvestimentosTab() {
 
   const handleCreateTransaction = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCode || !newQty || !newPrice) return;
+    if (!newCode || !newQty || !newPrice || !activeWallet) return;
 
     const tx: Transaction = {
       id: "tx_" + Date.now(),
@@ -380,7 +379,7 @@ export default function InvestimentosTab() {
       status: newType === "dividendo" ? newDivStatus : undefined
     };
 
-    setTransactions(prev => [...prev, tx]);
+    setWallets(prev => prev.map(w => w.id === activeWallet.id ? { ...w, transactions: [...w.transactions, tx] } : w));
     setIsAddModalOpen(false);
 
     // Reset fields
@@ -392,13 +391,29 @@ export default function InvestimentosTab() {
   };
 
   const deleteAssetByCode = (code: string) => {
-    setTransactions(prev => prev.filter(t => t.code !== code));
+    if (!activeWallet) return;
+    setWallets(prev => prev.map(w => w.id === activeWallet.id ? { ...w, transactions: w.transactions.filter(t => t.code !== code) } : w));
   };
 
-  const clearAllData = () => {
-    // Avoid native blocks in sandboxed iframe environments
-    setTransactions([]);
-    localStorage.removeItem("tarflow_transactions");
+  const createWallet = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = newWalletName.trim();
+    if (!name) return;
+    const wallet: PortfolioWallet = { id: "wallet_" + Date.now(), name, transactions: [] };
+    setWallets(prev => [...prev, wallet]);
+    setActiveWalletId(wallet.id);
+    setNewWalletName("");
+    setIsNewWalletModalOpen(false);
+  };
+
+  const confirmDeleteWallet = () => {
+    if (!walletPendingDelete) return;
+    const remaining = wallets.filter(w => w.id !== walletPendingDelete.id);
+    setWallets(remaining);
+    if (activeWalletId === walletPendingDelete.id) {
+      setActiveWalletId(remaining[0]?.id || "");
+    }
+    setWalletPendingDelete(null);
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -493,25 +508,58 @@ export default function InvestimentosTab() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md cursor-pointer transition-all text-xs font-black uppercase tracking-wider"
-            >
-              <Plus size={15} className="stroke-[3]" />
-              Novo Lançamento
-            </button>
-
-            {transactions.length > 0 && (
+            {wallets.length > 0 && (
               <button
-                onClick={clearAllData}
-                className="flex items-center gap-1 px-3 py-2 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/5 transition-all cursor-pointer text-xs font-bold rounded-xl"
+                onClick={() => setIsAddModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md cursor-pointer transition-all text-xs font-black uppercase tracking-wider"
               >
-                <Trash2 size={13} />
-                Limpar Carteira
+                <Plus size={15} className="stroke-[3]" />
+                Novo Lançamento
               </button>
             )}
           </div>
         </div>
+
+        {/* Seletor de carteiras */}
+        {activeSubTab === "carteira" && (
+          <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1">
+            {wallets.map(w => (
+              <div key={w.id} className="relative group shrink-0">
+                <button
+                  onClick={() => setActiveWalletId(w.id)}
+                  className={`flex items-center gap-2 pl-3.5 pr-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    wallets.length > 1 ? "pr-8" : ""
+                  } ${
+                    w.id === activeWalletId
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-color)]"
+                  }`}
+                >
+                  <Wallet size={13} />
+                  {w.name}
+                </button>
+                {wallets.length > 1 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setWalletPendingDelete(w); }}
+                    className={`absolute right-2.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all cursor-pointer ${
+                      w.id === activeWalletId ? "text-white/70 hover:text-white" : "text-zinc-400 hover:text-red-500"
+                    }`}
+                    title="Excluir carteira"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              onClick={() => setIsNewWalletModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-dashed border-[var(--border-color)] text-[var(--text-muted)] hover:text-blue-500 hover:border-blue-500 transition-all cursor-pointer shrink-0 whitespace-nowrap"
+            >
+              <Plus size={13} />
+              Nova Carteira
+            </button>
+          </div>
+        )}
 
         {/* Main tabs: Carteira / Simulador */}
         <div className="grid grid-cols-2 gap-2 w-full mb-6 bg-[var(--card-bg)]/40 p-2 rounded-2xl border border-[var(--border-color)] max-w-md">
@@ -534,8 +582,35 @@ export default function InvestimentosTab() {
           ))}
         </div>
 
+        {/* --- NO WALLETS EMPTY STATE --- */}
+        {activeSubTab === "carteira" && wallets.length === 0 && (
+          <div className="py-16 px-4 flex flex-col items-center text-center justify-center bg-[var(--card-bg)]/20 border border-dashed border-[var(--border-color)] rounded-3xl max-w-lg mx-auto my-6 p-6">
+            <div className="w-16 h-16 bg-blue-500/10 text-blue-500 flex items-center justify-center rounded-2xl border border-blue-500/20 mb-5">
+              <Wallet size={28} />
+            </div>
+
+            <h3 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-wide">
+              Nenhuma Carteira Criada
+            </h3>
+
+            <p className="text-xs text-[var(--text-muted)] mt-2 leading-relaxed max-w-sm">
+              Crie sua primeira carteira para começar a registrar seus investimentos. Você pode ter quantas carteiras quiser, cada uma com seu próprio nome.
+            </p>
+
+            <div className="mt-6 w-full max-w-xs">
+              <button
+                onClick={() => setIsNewWalletModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs py-3 px-4 rounded-xl transition-all cursor-pointer shadow-md"
+              >
+                <Plus size={14} className="stroke-[3]" />
+                Criar Carteira
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* --- PORTFOLIO EMPTY STATE --- */}
-        {activeSubTab === "carteira" && transactions.length === 0 && (
+        {activeSubTab === "carteira" && wallets.length > 0 && transactions.length === 0 && (
           <div className="py-16 px-4 flex flex-col items-center text-center justify-center bg-[var(--card-bg)]/20 border border-dashed border-[var(--border-color)] rounded-3xl max-w-lg mx-auto my-6 p-6">
             <div className="w-16 h-16 bg-blue-500/10 text-blue-500 flex items-center justify-center rounded-2xl border border-blue-500/20 mb-5">
               <Wallet size={28} />
@@ -546,7 +621,7 @@ export default function InvestimentosTab() {
             </h3>
 
             <p className="text-xs text-[var(--text-muted)] mt-2 leading-relaxed max-w-sm">
-              Você ainda não cadastrou ativos na sua custódia. Clique no botão de <strong>Novo Lançamento</strong> acima para pesquisar qualquer ação da B3 (PETR4, BBAS3, etc.), FII ou Criptomoeda com autocompletar instantâneo.
+              Você ainda não cadastrou ativos na <strong>{activeWallet?.name}</strong>. Clique no botão de <strong>Novo Lançamento</strong> acima para pesquisar qualquer ação da B3 (PETR4, BBAS3, etc.), FII ou Criptomoeda com autocompletar instantâneo.
             </p>
 
             <div className="mt-6 w-full max-w-xs">
@@ -562,11 +637,11 @@ export default function InvestimentosTab() {
         )}
 
         {/* --- MINHA CARTEIRA DASHBOARD --- */}
-        {activeSubTab === "carteira" && transactions.length > 0 && (
+        {activeSubTab === "carteira" && wallets.length > 0 && transactions.length > 0 && (
           <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-xl font-black text-[var(--text-primary)]">Minha Carteira</h2>
+                <h2 className="text-xl font-black text-[var(--text-primary)]">{activeWallet?.name}</h2>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
                   Consolidação em tempo real dos seus lançamentos de compra, venda e proventos.
                 </p>
@@ -958,6 +1033,119 @@ export default function InvestimentosTab() {
                 </div>
 
               </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* --- NOVA CARTEIRA MODAL --- */}
+      <AnimatePresence>
+        {isNewWalletModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsNewWalletModalOpen(false)}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998] pointer-events-auto"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: "spring", damping: 25, stiffness: 280 }}
+              className="fixed inset-0 m-auto w-[90vw] max-w-sm h-fit flex flex-col bg-[var(--container-bg)] border-2 border-[var(--border-color)] rounded-3xl p-5 sm:p-6 z-[9999] shadow-2xl text-left"
+            >
+              <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3.5 mb-4">
+                <div className="flex items-center gap-1.5">
+                  <Wallet size={14} className="text-blue-500" />
+                  <h3 className="text-sm font-black uppercase tracking-wider text-[var(--text-primary)]">Nova Carteira</h3>
+                </div>
+                <button
+                  onClick={() => setIsNewWalletModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-500/10 hover:bg-zinc-500/20 text-zinc-400 hover:text-[var(--text-primary)] flex items-center justify-center transition-all cursor-pointer"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              <form onSubmit={createWallet} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)]">Nome da Carteira</label>
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    value={newWalletName}
+                    onChange={(e) => setNewWalletName(e.target.value)}
+                    placeholder="Ex: Carteira Cripto, Aposentadoria..."
+                    className="w-full bg-[var(--card-bg)] text-xs font-bold p-3 rounded-xl border border-[var(--border-color)] text-[var(--text-primary)] focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-3 text-xs font-black uppercase">
+                  <button
+                    type="button"
+                    onClick={() => setIsNewWalletModalOpen(false)}
+                    className="flex-grow bg-zinc-500/10 hover:bg-zinc-500/15 border border-[var(--border-color)] py-3 rounded-xl transition-all cursor-pointer text-center text-[var(--text-primary)]"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-grow bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl transition-all cursor-pointer text-center"
+                  >
+                    Criar
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* --- EXCLUIR CARTEIRA CONFIRM MODAL --- */}
+      <AnimatePresence>
+        {walletPendingDelete && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setWalletPendingDelete(null)}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998] pointer-events-auto"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: "spring", damping: 25, stiffness: 280 }}
+              className="fixed inset-0 m-auto w-[90vw] max-w-sm h-fit flex flex-col bg-[var(--container-bg)] border-2 border-[var(--border-color)] rounded-3xl p-5 sm:p-6 z-[9999] shadow-2xl text-left"
+            >
+              <div className="flex items-center gap-2 text-red-500 mb-3">
+                <AlertTriangle size={18} />
+                <h3 className="text-sm font-black uppercase tracking-wider">Excluir Carteira</h3>
+              </div>
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-5">
+                Tem certeza que deseja excluir <strong className="text-[var(--text-primary)]">{walletPendingDelete.name}</strong>?
+                Essa ação apaga permanentemente {walletPendingDelete.transactions.length === 1 ? "o único lançamento dela" : `os ${walletPendingDelete.transactions.length} lançamentos dela`} e não pode ser desfeita.
+              </p>
+              <div className="flex gap-3 text-xs font-black uppercase">
+                <button
+                  type="button"
+                  onClick={() => setWalletPendingDelete(null)}
+                  className="flex-grow bg-zinc-500/10 hover:bg-zinc-500/15 border border-[var(--border-color)] py-3 rounded-xl transition-all cursor-pointer text-center text-[var(--text-primary)]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteWallet}
+                  className="flex-grow bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl transition-all cursor-pointer text-center"
+                >
+                  Excluir
+                </button>
+              </div>
             </motion.div>
           </>
         )}
