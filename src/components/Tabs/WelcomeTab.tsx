@@ -75,16 +75,16 @@ export default function WelcomeTab() {
         className="flex flex-col items-center shrink-0 w-full max-w-md mx-auto"
       >
         {/* Logo */}
-        <div className="w-full max-w-[16rem] md:max-w-xs flex justify-center items-center shrink-0 pointer-events-none mb-0">
-          <img 
+        <div className="w-32 md:w-40 flex justify-center items-center shrink-0 pointer-events-none mb-2">
+          <img
             src={`${import.meta.env.BASE_URL}tarflowicon.png`}
-            alt="Tarflow" 
-            className="w-full h-auto object-contain drop-shadow-[0_0_30px_rgba(45,115,255,0.3)] transition-all duration-300 scale-[1.1] md:scale-[1.2] pointer-events-auto hover:drop-shadow-[0_20px_40px_rgba(45,115,255,0.5)]"
+            alt="Tarflow"
+            className="w-full h-auto object-contain drop-shadow-[0_0_30px_rgba(45,115,255,0.3)] transition-all duration-300 pointer-events-auto hover:drop-shadow-[0_20px_40px_rgba(45,115,255,0.5)]"
           />
         </div>
-        
+
         {/* Title and Subtitle container */}
-        <div className="flex flex-col items-center gap-2 z-10 relative -mt-4 md:-mt-6 w-full">
+        <div className="flex flex-col items-center gap-2 z-10 relative w-full">
           <h1 className="text-4xl md:text-5xl font-sans font-black text-[var(--text-primary)] leading-none mb-2 tracking-tight">
             Tarflow
           </h1>
