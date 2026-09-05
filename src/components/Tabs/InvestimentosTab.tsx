@@ -50,12 +50,47 @@ const CATEGORY_LABELS: Record<string, string> = {
   "Outros": "Outros ativos"
 };
 
+// Posição inicial real (Investidor10 · carteira "JOAO VICTOR"), usada apenas na
+// primeira vez que o app roda neste navegador. Quantidades vêm direto do
+// snapshot do usuário; o preço médio foi calculado a partir da rentabilidade
+// exibida no snapshot (preço atual / (1 + rentab%)), já que o snapshot não
+// trazia o preço médio de compra diretamente.
+const SEED_DATE = "2025-09-01";
+const DEFAULT_PORTFOLIO_TRANSACTIONS: Transaction[] = [
+  { id: "seed_petr4", code: "PETR4", name: "Petrobras PN", qty: 45, price: 27.04, date: SEED_DATE, type: "compra", category: "Ações", sector: "Petróleo e Gás" },
+  { id: "seed_bbas3", code: "BBAS3", name: "Banco do Brasil ON", qty: 63, price: 22.70, date: SEED_DATE, type: "compra", category: "Ações", sector: "Bancos" },
+  { id: "seed_bbse3", code: "BBSE3", name: "BB Seguridade ON", qty: 24, price: 30.73, date: SEED_DATE, type: "compra", category: "Ações", sector: "Seguros" },
+  { id: "seed_cmig4", code: "CMIG4", name: "Cemig PN", qty: 24, price: 10.15, date: SEED_DATE, type: "compra", category: "Ações", sector: "Energia Elétrica" },
+  { id: "seed_klbn4", code: "KLBN4", name: "Klabin PN", qty: 59, price: 3.79, date: SEED_DATE, type: "compra", category: "Ações", sector: "Papel e Embalagens" },
+  { id: "seed_gare11", code: "GARE11", name: "Guardian Real Estate FII", qty: 123, price: 7.72, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Logística e Renda Urbana" },
+  { id: "seed_cpts11", code: "CPTS11", name: "Capitânia Securities FII", qty: 72, price: 6.26, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Papel e CRIs" },
+  { id: "seed_psec11", code: "PSEC11", name: "Pátria Special Situations FII", qty: 7, price: 54.12, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Crédito Imobiliário" },
+  { id: "seed_xpml11", code: "XPML11", name: "XP Malls FII", qty: 2, price: 92.80, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Shopping Centers" },
+  { id: "seed_mxrf11", code: "MXRF11", name: "Maxi Renda FII", qty: 12, price: 6.89, date: SEED_DATE, type: "compra", category: "FIIs", sector: "Papel e Híbrido" },
+  { id: "seed_btc", code: "BTC", name: "Bitcoin", qty: 0.002838, price: 470105, date: SEED_DATE, type: "compra", category: "Criptomoedas", sector: "Criptoativo / Reserva Digital" },
+  { id: "seed_ivv", code: "IVV", name: "iShares Core S&P 500 ETF", qty: 1, price: 442.50, date: SEED_DATE, type: "compra", category: "ETFs", sector: "ETF Internacional (S&P 500)" },
+  { id: "seed_lci", code: "LCIINTER", name: "LCI Inter", qty: 1, price: 504.00, date: SEED_DATE, type: "compra", category: "Outros", sector: "Renda Fixa · 90% CDI" },
+];
+const SEED_FLAG_KEY = "tarflow_investimentos_seeded_v1";
+
 export default function InvestimentosTab() {
   const [activeSubTab, setActiveSubTab] = useState<"carteira" | "simulador">("carteira");
 
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     const saved = localStorage.getItem("tarflow_transactions");
-    return saved ? JSON.parse(saved) : []; // Clean portfolio by default
+    let parsed: Transaction[] = [];
+    if (saved) {
+      try {
+        const p = JSON.parse(saved);
+        if (Array.isArray(p)) parsed = p;
+      } catch {
+        // ignore malformed data, treat as empty
+      }
+    }
+    if (parsed.length > 0) return parsed;
+    // Sem lançamentos ainda: se a carteira já foi semeada/limpa alguma vez, respeita o vazio.
+    // Caso contrário (primeira visita), parte da posição real conhecida em vez de uma tela em branco.
+    return localStorage.getItem(SEED_FLAG_KEY) ? [] : DEFAULT_PORTFOLIO_TRANSACTIONS;
   });
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -78,6 +113,7 @@ export default function InvestimentosTab() {
   // Auto-Sync to State persistence
   useEffect(() => {
     localStorage.setItem("tarflow_transactions", JSON.stringify(transactions));
+    localStorage.setItem(SEED_FLAG_KEY, "1");
   }, [transactions]);
 
   // Autocomplete Listener using Complete B3 Asset Database

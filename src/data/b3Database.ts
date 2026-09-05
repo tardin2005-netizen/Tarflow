@@ -183,7 +183,13 @@ export const B3_ASSET_DATABASE: Record<string, B3AssetData> = {
   BNB: { code: "BNB", name: "Binance Coin", price: 3850, category: "Criptomoedas", sector: "Exchange Utility", dy: 0, buyDecision: "Manter" },
   USDT: { code: "USDT", name: "Tether USD", price: 5.18, category: "Criptomoedas", sector: "Stablecoin Dólar", dy: 0, buyDecision: "Manter" },
   ADA: { code: "ADA", name: "Cardano", price: 4.80, category: "Criptomoedas", sector: "Smart Contracts", dy: 0, buyDecision: "Manter" },
-  XRP: { code: "XRP", name: "Ripple XRP", price: 12.40, category: "Criptomoedas", sector: "Pagamentos Globais", dy: 0, buyDecision: "Manter" }
+  XRP: { code: "XRP", name: "Ripple XRP", price: 12.40, category: "Criptomoedas", sector: "Pagamentos Globais", dy: 0, buyDecision: "Manter" },
+
+  // --- INTERNACIONAL (fora da B3, sem cotação ao vivo neste app) ---
+  IVV: { code: "IVV", name: "iShares Core S&P 500 ETF", price: 523.00, category: "ETFs", sector: "ETF Internacional (S&P 500)", dy: 0, buyDecision: "Manter" },
+
+  // --- RENDA FIXA ---
+  LCIINTER: { code: "LCIINTER", name: "LCI Inter", price: 570.50, category: "Outros", sector: "Renda Fixa · 90% CDI", dy: 0, buyDecision: "Manter" }
 };
 
 export function searchB3Assets(query: string, maxResults = 12): B3AssetData[] {
