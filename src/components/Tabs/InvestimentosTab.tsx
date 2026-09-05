@@ -90,6 +90,71 @@ export default function InvestimentosTab() {
     setAutocompleteSuggestions(matches);
   }, [newCode]);
 
+  // Live prices, keyed by ticker code (BRL). Overrides the static B3_ASSET_DATABASE
+  // price whenever a fresher quote is available.
+  const [livePrices, setLivePrices] = useState<Record<string, number>>({});
+  const [lastLiveUpdate, setLastLiveUpdate] = useState<Date | null>(null);
+
+  const holdingCodes = useMemo(() => {
+    const codes = new Set<string>();
+    transactions.forEach(tx => codes.add(tx.code.toUpperCase()));
+    return Array.from(codes);
+  }, [transactions]);
+
+  const hasCrypto = holdingCodes.some(c => B3_ASSET_DATABASE[c]?.category === "Criptomoedas" || c === "BTC");
+
+  // BTC: public Binance WebSocket, no polling needed - price updates as trades happen.
+  useEffect(() => {
+    if (!hasCrypto) return;
+    const ws = new WebSocket("wss://stream.binance.com:9443/ws/btcbrl@ticker");
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        const price = parseFloat(data.c); // last price
+        if (!isNaN(price)) {
+          setLivePrices(prev => ({ ...prev, BTC: price }));
+          setLastLiveUpdate(new Date());
+        }
+      } catch {
+        // ignore malformed frames
+      }
+    };
+    return () => ws.close();
+  }, [hasCrypto]);
+
+  // Ações/FIIs: brapi.dev's free tier supports one ticker per request without a
+  // token, so poll each held code on an interval instead of a single batch call.
+  useEffect(() => {
+    const stockCodes = holdingCodes.filter(c => c !== "BTC" && B3_ASSET_DATABASE[c]?.category !== "Criptomoedas");
+    if (stockCodes.length === 0) return;
+
+    let cancelled = false;
+    const fetchAll = async () => {
+      for (const code of stockCodes) {
+        if (cancelled) return;
+        try {
+          const res = await fetch(`https://brapi.dev/api/quote/${code}`);
+          if (res.ok) {
+            const data = await res.json();
+            const price = data?.results?.[0]?.regularMarketPrice;
+            if (typeof price === "number") {
+              setLivePrices(prev => ({ ...prev, [code]: price }));
+              setLastLiveUpdate(new Date());
+            }
+          }
+        } catch {
+          // keep the last known price on failure
+        }
+        // Small stagger between requests to stay comfortably under brapi's rate limit
+        await new Promise(r => setTimeout(r, 400));
+      }
+    };
+
+    fetchAll();
+    const interval = setInterval(fetchAll, 45000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [holdingCodes.join(",")]);
+
   // Compute Current Asset holdings from transaction list
   const calculatedAssets = useMemo(() => {
     const assetMap: Record<string, {
@@ -129,7 +194,7 @@ export default function InvestimentosTab() {
     return Object.values(assetMap)
       .filter(a => a.qty > 0)
       .map(a => {
-        const livePrice = B3_ASSET_DATABASE[a.code]?.price || (a.totalCost / a.qty);
+        const livePrice = livePrices[a.code] ?? B3_ASSET_DATABASE[a.code]?.price ?? (a.totalCost / a.qty);
         return {
           code: a.code,
           name: a.name,
@@ -141,7 +206,7 @@ export default function InvestimentosTab() {
           proventosTotal: a.proventosTotal
         };
       });
-  }, [transactions]);
+  }, [transactions, livePrices]);
 
   // Basic KPI Math
   const totalPatrimony = useMemo(() => {
@@ -463,11 +528,22 @@ export default function InvestimentosTab() {
         {/* --- MINHA CARTEIRA DASHBOARD --- */}
         {activeSubTab === "carteira" && transactions.length > 0 && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-black text-[var(--text-primary)]">Minha Carteira</h2>
-              <p className="text-xs text-[var(--text-muted)] mt-1">
-                Consolidação em tempo real dos seus lançamentos de compra, venda e proventos.
-              </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-xl font-black text-[var(--text-primary)]">Minha Carteira</h2>
+                <p className="text-xs text-[var(--text-muted)] mt-1">
+                  Consolidação em tempo real dos seus lançamentos de compra, venda e proventos.
+                </p>
+              </div>
+              {lastLiveUpdate && (
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-500 shrink-0">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  Cotações ao vivo · {lastLiveUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                </div>
+              )}
             </div>
 
             {/* KPIs */}
